@@ -28,9 +28,9 @@ func InitDockerSystem() {
 }
 
 func ensureMCServerImageIsReady() {
-	_, err := cli.ImagePull(ctx, config.IMAGE_NAME, types.ImagePullOptions{})
+	_, err := cli.ImagePull(ctx, config.LatestImageName, types.ImagePullOptions{})
 	if err != nil {
-		fmt.Println("Oh oh! An error occurred while downloading the newest", config.IMAGE_NAME, "image:", err, "\nRetrying in 2 Seconds...")
+		fmt.Println("Oh oh! An error occurred while downloading the newest", config.LatestImageName, "image:", err, "\nRetrying in 2 Seconds...")
 		time.Sleep(2 * time.Second)
 		ensureMCServerImageIsReady()
 	}
@@ -56,27 +56,48 @@ func ListContainersByNameStart(namePrefix string) ([]types.Container, error) {
 	return container, nil
 }
 
-func RunContainer(imageName string, containerName string, containerPort int) {
-	port := strconv.Itoa(config.MCSERVER_PROXY_PORT) + "/tcp"
+// RunContainer Attempts to run a container with given arguments
+// Returns container ID as a string and nil if successful
+// Otherwise an empty string and an error
+func RunContainer(imageName string, containerName string, containerPort int, env []string) (string, error) {
+	port := strconv.Itoa(config.McServerProxyPort) + "/tcp"
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image: imageName,
 		ExposedPorts: nat.PortSet{
 			nat.Port(port): {},
 		},
+		Env: env,
 	}, &container.HostConfig{
 		PortBindings: nat.PortMap{
 			nat.Port(port): []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: strconv.Itoa(containerPort)}},
 		},
 	}, nil, nil, containerName)
+
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		panic(err)
+		return "", err
 	}
 
-	fmt.Println(resp.ID)
+	return resp.ID, nil
+}
+
+func PauseContainer(containerID string) error {
+	return cli.ContainerPause(ctx, containerID)
+}
+
+func ResumeContainer(containerID string) error {
+	return cli.ContainerUnpause(ctx, containerID)
+}
+
+func IsContainerPaused(containerID string) (bool, error) {
+	containerStats, err := cli.ContainerInspect(ctx, containerID)
+	if err != nil {
+		return false, err
+	}
+	return containerStats.State.Paused, nil
 }
 
 func Close() {
