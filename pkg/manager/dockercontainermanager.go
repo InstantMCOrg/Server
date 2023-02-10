@@ -100,6 +100,10 @@ func IsContainerPaused(containerID string) (bool, error) {
 	return containerStats.State.Paused, nil
 }
 
+func KillContainer(containerID string) error {
+	return cli.ContainerRemove(ctx, containerID, types.ContainerRemoveOptions{Force: true})
+}
+
 func Close() {
 	cli.Close()
 }

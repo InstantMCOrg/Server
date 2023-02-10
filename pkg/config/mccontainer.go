@@ -1,5 +1,7 @@
 package config
 
+import "strconv"
+
 const (
 	BaseImageName     = "ghcr.io/instantminecraft/client"
 	ContainerBaseName = "MC-Server-"
@@ -11,3 +13,7 @@ var (
 	WaitingReadyContainerName = ContainerBaseName + "ready"
 	LatestImageName           = "ghcr.io/instantminecraft/client:mc-" + AvailableVersions[0]
 )
+
+func WaitingReadyContainerNr(containerNumber int) string {
+	return WaitingReadyContainerName + "-" + strconv.Itoa(containerNumber)
+}

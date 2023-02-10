@@ -16,10 +16,20 @@ var mcServerPreperationWG sync.WaitGroup
 
 // InitMCServerManagement Setup docker connection and retrieve already running minecraft server container instances
 func InitMCServerManagement() {
-	_, err := ListContainersByNameStart(config.ContainerBaseName)
+	possibleUnfinishedPrepContainer, err := ListContainersByNameStart(config.WaitingReadyContainerName)
 	if err != nil {
 		log.Println("Couldn't connect to docker daemon")
 		panic(err)
+	}
+
+	for _, container := range possibleUnfinishedPrepContainer {
+		// check if container is unfinished
+		isPaused, err := IsContainerPaused(container.ID)
+		if err != nil || !isPaused {
+			// container needs to be removed because we can't be sure in what state the container is
+			KillContainer(container.ID)
+		}
+
 	}
 
 	// check if a container needs to be prepared
@@ -42,9 +52,15 @@ func PrepareMcServer() {
 	port := GeneratePort()
 	AddPortToUsageList(port)
 	noAutoStartEnv := []string{"autostart=false"}
-	containerID, err := RunContainer(config.LatestImageName, config.WaitingReadyContainerName, port, noAutoStartEnv)
+
+	containerName := config.WaitingReadyContainerName
+	preparedContainer, err := GetPreparedMcServer()
+	if err == nil && len(preparedContainer) > 0 {
+		containerName = config.WaitingReadyContainerNr(len(preparedContainer))
+	}
+	containerID, err := RunContainer(config.LatestImageName, containerName, port, noAutoStartEnv)
 	if err != nil {
-		log.Println("Couldn't start preparation docker container. Retrying in 2 seconds...")
+		log.Println("Couldn't start preparation docker container. Retrying in 2 seconds...", err)
 		time.Sleep(2 * time.Second)
 		RemovePortFromUsageList(port)
 		PrepareMcServer()
