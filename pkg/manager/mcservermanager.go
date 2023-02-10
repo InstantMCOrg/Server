@@ -28,8 +28,11 @@ func InitMCServerManagement() {
 		if err != nil || !isPaused {
 			// container needs to be removed because we can't be sure in what state the container is
 			KillContainer(container.ID)
+			RemovePortFromUsageList(int(container.Ports[0].PublicPort))
+			continue
 		}
-
+		// reserve port for this container
+		AddPortToUsageList(int(container.Ports[0].PublicPort))
 	}
 
 	// check if a container needs to be prepared
