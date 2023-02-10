@@ -41,7 +41,7 @@ func InitMCServerManagement() {
 		log.Println("Couldn't fetch already prepared containers:", err)
 	} else if len(preparedContainer) == 0 {
 		log.Println("Preparing a mc server in the background...")
-		go PrepareMcServer()
+		PrepareMcServer()
 	} else if len(preparedContainer) > 0 {
 		log.Println("A mc server is already prepared. Good!")
 	}
@@ -51,7 +51,10 @@ func InitMCServerManagement() {
 // PrepareMcServer Creates a mc server container, setup the mc world and pause the container for later deployment
 func PrepareMcServer() {
 	mcServerPreperationWG.Add(1)
-	defer mcServerPreperationWG.Done()
+	go prepareMcServerSync()
+}
+
+func prepareMcServerSync() {
 	port := GeneratePort()
 	AddPortToUsageList(port)
 	noAutoStartEnv := []string{"autostart=false"}
@@ -61,12 +64,14 @@ func PrepareMcServer() {
 	if err == nil && len(preparedContainer) > 0 {
 		containerName = config.WaitingReadyContainerNr(len(preparedContainer))
 	}
+	fmt.Println(len(preparedContainer))
+	fmt.Println("Starting container", containerName)
 	containerID, err := RunContainer(config.LatestImageName, containerName, port, noAutoStartEnv)
 	if err != nil {
 		log.Println("Couldn't start preparation docker container. Retrying in 2 seconds...", err)
 		time.Sleep(2 * time.Second)
 		RemovePortFromUsageList(port)
-		PrepareMcServer()
+		prepareMcServerSync()
 		return
 	}
 
@@ -80,6 +85,7 @@ func PrepareMcServer() {
 	// Now we need to pause the container because the mc world needs to stop
 	PauseContainer(containerID)
 	fmt.Println("Mc server container prepared")
+	mcServerPreperationWG.Done()
 }
 
 // GetPreparedMcServer Returns a list of Container which minecraft world is setup and the container state is paused
@@ -116,6 +122,7 @@ func StartMcServer() error {
 	if len(preparedMcServer) == 0 {
 		fmt.Println("Preparing Container...")
 		PrepareMcServer()
+		WaitForFinsishedPreparing()
 		StartMcServer()
 		return nil
 	}
