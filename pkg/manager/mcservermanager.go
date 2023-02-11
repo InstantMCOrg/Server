@@ -64,8 +64,6 @@ func prepareMcServerSync() {
 	if err == nil && len(preparedContainer) > 0 {
 		containerName = config.WaitingReadyContainerNr(len(preparedContainer))
 	}
-	fmt.Println(len(preparedContainer))
-	fmt.Println("Starting container", containerName)
 	containerID, err := RunContainer(config.LatestImageName, containerName, port, noAutoStartEnv)
 	if err != nil {
 		log.Println("Couldn't start preparation docker container. Retrying in 2 seconds...", err)
