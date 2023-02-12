@@ -1,12 +1,11 @@
 package manager
 
 import (
-	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/instantminecraft/server/pkg/api/mcserverapi"
 	"github.com/instantminecraft/server/pkg/config"
 	"github.com/instantminecraft/server/pkg/models"
-	"log"
+	"github.com/rs/zerolog/log"
 	"sync"
 	"time"
 )
@@ -18,7 +17,7 @@ var mcServerPreperationWG sync.WaitGroup
 func InitMCServerManagement() {
 	possibleUnfinishedPrepContainer, err := ListContainersByNameStart(config.WaitingReadyContainerName)
 	if err != nil {
-		log.Println("Couldn't connect to docker daemon")
+		log.Fatal().Err(err).Msg("Couldn't connect to docker daemon")
 		panic(err)
 	}
 
@@ -38,12 +37,12 @@ func InitMCServerManagement() {
 	// check if a container needs to be prepared
 	preparedContainer, err := GetPreparedMcServer()
 	if err != nil {
-		log.Println("Couldn't fetch already prepared containers:", err)
+		log.Error().Err(err).Msg("Couldn't fetch already prepared containers:")
 	} else if len(preparedContainer) == 0 {
-		log.Println("Preparing a mc server in the background...")
+		log.Info().Msg("Preparing a mc server in the background...")
 		PrepareMcServer()
 	} else if len(preparedContainer) > 0 {
-		log.Println("A mc server is already prepared. Good!")
+		log.Info().Msg("A mc server is already prepared. Good!")
 	}
 
 }
@@ -66,7 +65,7 @@ func prepareMcServerSync() {
 	}
 	containerID, err := RunContainer(config.LatestImageName, containerName, port, noAutoStartEnv)
 	if err != nil {
-		log.Println("Couldn't start preparation docker container. Retrying in 2 seconds...", err)
+		log.Error().Err(err).Msg("Couldn't start preparation docker container. Retrying in 2 seconds...")
 		time.Sleep(2 * time.Second)
 		RemovePortFromUsageList(port)
 		prepareMcServerSync()
@@ -82,7 +81,7 @@ func prepareMcServerSync() {
 
 	// Now we need to pause the container because the mc world needs to stop
 	PauseContainer(containerID)
-	fmt.Println("Mc server container prepared")
+	log.Info().Msg("A mc server container has been prepared")
 	mcServerPreperationWG.Done()
 }
 
@@ -110,7 +109,7 @@ func WaitForFinsishedPreparing() {
 }
 
 func StartMcServer() error {
-	fmt.Println("Looking for prepared Container...")
+	log.Info().Msg("Looking for prepared Container...")
 	preparedMcServer, err := GetPreparedMcServer()
 
 	if err != nil {
@@ -118,14 +117,14 @@ func StartMcServer() error {
 	}
 
 	if len(preparedMcServer) == 0 {
-		fmt.Println("Preparing Container...")
+		log.Info().Msg("Preparing Container...")
 		PrepareMcServer()
 		WaitForFinsishedPreparing()
 		StartMcServer()
 		return nil
 	}
 
-	fmt.Println("Resuming container...")
+	log.Info().Msg("Resuming container...")
 	err = ResumeContainer(preparedMcServer[0].ID)
 	return err
 }

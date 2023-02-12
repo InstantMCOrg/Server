@@ -1,13 +1,13 @@
 package manager
 
 import (
-	"fmt"
 	"github.com/docker/distribution/context"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/instantminecraft/server/pkg/config"
+	"github.com/rs/zerolog/log"
 	"strconv"
 	"strings"
 	"time"
@@ -30,7 +30,7 @@ func InitDockerSystem() {
 func ensureMCServerImageIsReady() {
 	_, err := cli.ImagePull(ctx, config.LatestImageName, types.ImagePullOptions{})
 	if err != nil {
-		fmt.Println("Oh oh! An error occurred while downloading the newest", config.LatestImageName, "image:", err, "\nRetrying in 2 Seconds...")
+		log.Error().Err(err).Msgf("Oh oh! An error occurred while downloading the newest %s image. Retrying in 2 seconds...", config.LatestImageName)
 		time.Sleep(2 * time.Second)
 		ensureMCServerImageIsReady()
 	}
