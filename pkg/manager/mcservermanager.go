@@ -35,7 +35,7 @@ func InitMCServerManagement() {
 	}
 
 	// check if a container needs to be prepared
-	preparedContainer, err := GetPreparedMcServer()
+	preparedContainer, err := GetPreparedMcServerContainer()
 	if err != nil {
 		log.Error().Err(err).Msg("Couldn't fetch already prepared containers:")
 	} else if len(preparedContainer) == 0 {
@@ -59,7 +59,7 @@ func prepareMcServerSync() {
 	noAutoStartEnv := []string{"autostart=false"}
 
 	containerName := config.WaitingReadyContainerName
-	preparedContainer, err := GetPreparedMcServer()
+	preparedContainer, err := GetPreparedMcServerContainer()
 	if err == nil && len(preparedContainer) > 0 {
 		containerName = config.WaitingReadyContainerNr(len(preparedContainer))
 	}
@@ -85,8 +85,8 @@ func prepareMcServerSync() {
 	mcServerPreperationWG.Done()
 }
 
-// GetPreparedMcServer Returns a list of Container which minecraft world is setup and the container state is paused
-func GetPreparedMcServer() ([]types.Container, error) {
+// GetPreparedMcServerContainer Returns a list of Container which minecraft world is setup and the container state is paused
+func GetPreparedMcServerContainer() ([]types.Container, error) {
 	var readyContainer []types.Container
 	container, err := ListContainersByNameStart(config.WaitingReadyContainerName)
 	if err != nil {
@@ -110,7 +110,7 @@ func WaitForFinsishedPreparing() {
 
 func StartMcServer() error {
 	log.Info().Msg("Looking for prepared Container...")
-	preparedMcServer, err := GetPreparedMcServer()
+	preparedMcServer, err := GetPreparedMcServerContainer()
 
 	if err != nil {
 		return err
