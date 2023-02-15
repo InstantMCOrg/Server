@@ -13,6 +13,9 @@ func Register() *mux.Router {
 	r := mux.NewRouter()
 	r.Use(authMiddleware)
 	r.HandleFunc("/", rootRoute).Methods("GET")
+
+	r.HandleFunc("/login", loginRoute).Methods("POSt")
+
 	r.HandleFunc("/server/prepared", getPreparedServer).Methods("GET")
 	r.HandleFunc("/server/start", startServer).Methods("POST")
 	return r
