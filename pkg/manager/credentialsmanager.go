@@ -17,6 +17,12 @@ func SaveAuthKey(containerID string, authKey string) {
 	authKeyMap[containerID] = authKey
 }
 
+func MergeAuthKeys(authKeyValueMap map[string]string) {
+	for containerID, auth := range authKeyValueMap {
+		authKeyMap[containerID] = auth
+	}
+}
+
 // GetAuthKeyForMcServer Returns the auth key for a server. If no auth key found an empty string is returned
 // You need to save the auth key with `SaveAuthKey` before accessing this function
 func GetAuthKeyForMcServer(containerID string) string {

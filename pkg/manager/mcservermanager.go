@@ -16,6 +16,8 @@ import (
 var mcServer []models.McServerContainer
 var mcServerPreperationWG sync.WaitGroup
 
+const authEnvKey = "auth"
+
 // InitMCServerManagement Setup docker connection and retrieve already running minecraft server container instances
 func InitMCServerManagement() {
 	possibleUnfinishedPrepContainer, err := ListContainersByNameStart(config.WaitingReadyContainerName)
@@ -45,6 +47,9 @@ func InitMCServerManagement() {
 		log.Info().Msg("Preparing a mc server in the background...")
 		PrepareMcServer()
 	} else if len(preparedContainer) > 0 {
+		// we need obtain the auth keys
+		authKeys := ObtainAuthKeys(preparedContainer)
+		MergeAuthKeys(authKeys)
 		log.Info().Msg("A mc server is already prepared. Good!")
 	}
 
@@ -60,7 +65,7 @@ func prepareMcServerSync() {
 	port := GeneratePort()
 	AddPortToUsageList(port)
 	authKey := GenerateAuthKeyForMcServer()
-	env := []string{"autostart=false", fmt.Sprintf("auth=%s", authKey)}
+	env := []string{"autostart=false", fmt.Sprintf("%s=%s", authEnvKey, authKey)}
 
 	containerName := config.WaitingReadyContainerName
 	preparedContainer, err := GetPreparedMcServerContainer()

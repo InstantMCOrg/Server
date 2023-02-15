@@ -114,8 +114,31 @@ func RenameContainer(containerID string, name string) error {
 	return cli.ContainerRename(ctx, containerID, name)
 }
 
+func ObtainAuthKeys(container []types.Container) map[string]string {
+	authKeys := map[string]string{}
+
+	for _, curContainer := range container {
+		stats, err := GetContainerStats(curContainer.ID)
+		if err != nil {
+			continue
+		}
+		for _, curEnv := range stats.Config.Env {
+			if strings.HasPrefix(curEnv, authEnvKey) {
+				authKey := strings.Split(curEnv, "=")[1]
+				authKeys[curContainer.ID] = authKey
+			}
+		}
+	}
+
+	return authKeys
+}
+
+func GetContainerStats(containerID string) (types.ContainerJSON, error) {
+	return cli.ContainerInspect(ctx, containerID)
+}
+
 func IsContainerPaused(containerID string) (bool, error) {
-	containerStats, err := cli.ContainerInspect(ctx, containerID)
+	containerStats, err := GetContainerStats(containerID)
 	if err != nil {
 		return false, err
 	}
