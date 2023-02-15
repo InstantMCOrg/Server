@@ -1,9 +1,12 @@
 package models
 
-type MCServer struct {
-	ID     string
-	Port   int
-	UserID string
+type McServerContainer struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	ContainerID string `json:"container_id"`
+	McVersion   string `json:"mc_version"`
+	Port        int    `json:"port"`
+	Running     bool   `json:"running"`
 }
 
 type ServerStatus struct {

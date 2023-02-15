@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var mcServer []models.MCServer
+var mcServer []models.McServerContainer
 var mcServerPreperationWG sync.WaitGroup
 
 // InitMCServerManagement Setup docker connection and retrieve already running minecraft server container instances
