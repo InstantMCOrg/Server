@@ -1,10 +1,12 @@
 package manager
 
 import (
+	"errors"
 	"github.com/docker/docker/api/types"
 	"github.com/instantminecraft/server/pkg/api/mcserverapi"
 	"github.com/instantminecraft/server/pkg/config"
 	"github.com/instantminecraft/server/pkg/models"
+	"github.com/instantminecraft/server/pkg/utils"
 	"github.com/rs/zerolog/log"
 	"sync"
 	"time"
@@ -104,27 +106,80 @@ func GetPreparedMcServerContainer() ([]types.Container, error) {
 	return readyContainer, nil
 }
 
+func PreparedMcServerContainerExists(containerId string) (bool, error) {
+	container, err := ListContainersByNameStart(config.WaitingReadyContainerName)
+	if err != nil {
+		return false, err
+	}
+	for _, curContainer := range container {
+		isPaused, err := IsContainerPaused(curContainer.ID)
+		if err != nil {
+			continue
+		}
+		if isPaused && curContainer.ID == containerId {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func WaitForFinsishedPreparing() {
 	mcServerPreperationWG.Wait()
 }
 
-func StartMcServer() error {
-	log.Info().Msg("Looking for prepared Container...")
+func GetRunningMcServer() ([]models.McServerContainer, error) {
+	_, err := ListContainer()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+func generateId(serverName string) string {
+	return utils.MD5(serverName + utils.RandomString(32))
+}
+
+func generateContainerName(serverId string) string {
+	return config.ContainerBaseName + serverId
+}
+
+func StartMcServer(containerID string, name string) (models.McServerContainer, error) {
+	log.Info().Msgf("Looking for prepared container %s...", containerID)
 	preparedMcServer, err := GetPreparedMcServerContainer()
 
 	if err != nil {
-		return err
+		return models.McServerContainer{}, err
 	}
 
-	if len(preparedMcServer) == 0 {
-		log.Info().Msg("Preparing Container...")
-		PrepareMcServer()
-		WaitForFinsishedPreparing()
-		StartMcServer()
-		return nil
+	var exists bool = false
+	var targetContainer types.Container
+	for _, preparedServer := range preparedMcServer {
+		if preparedServer.ID == containerID {
+			exists = true
+			targetContainer = preparedServer
+			break
+		}
+	}
+	if !exists {
+		err := errors.New("Couldn't find prepared container with ID " + containerID)
+		log.Error().Err(err).Send()
+		return models.McServerContainer{}, err
 	}
 
-	log.Info().Msg("Resuming container...")
-	err = ResumeContainer(preparedMcServer[0].ID)
-	return err
+	log.Info().Msg("Starting Mc Server with container ID " + containerID)
+
+	id := generateId(name)
+
+	err = RenameContainer(containerID, generateContainerName(id))
+
+	if err != nil {
+		log.Error().Err(err).Msg("Couldn't rename container")
+	}
+
+	err = ResumeContainer(containerID)
+	mcVersion := utils.GetMcVersionFromContainer(targetContainer)
+	port := utils.GetPortFromContainer(targetContainer)
+	return models.McServerContainer{ContainerID: containerID, Name: name, ID: id, Port: port, McVersion: mcVersion, Running: true}, err
 }
