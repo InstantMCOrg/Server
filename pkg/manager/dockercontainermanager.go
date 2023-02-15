@@ -1,6 +1,11 @@
 package manager
 
 import (
+	"bufio"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/docker/distribution/context"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -8,9 +13,6 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/instantminecraft/server/pkg/config"
 	"github.com/rs/zerolog/log"
-	"strconv"
-	"strings"
-	"time"
 )
 
 var ctx = context.Background()
@@ -28,12 +30,28 @@ func InitDockerSystem() {
 }
 
 func ensureMCServerImageIsReady() {
-	_, err := cli.ImagePull(ctx, config.LatestImageName, types.ImagePullOptions{})
+	pullResp, err := cli.ImagePull(ctx, config.LatestImageName, types.ImagePullOptions{})
 	if err != nil {
 		log.Error().Err(err).Msgf("Oh oh! An error occurred while downloading the newest %s image. Retrying in 2 seconds...", config.LatestImageName)
 		time.Sleep(2 * time.Second)
 		ensureMCServerImageIsReady()
 	}
+	reader := bufio.NewReader(pullResp)
+	defer pullResp.Close()
+	// now we need to wait until the pull finished
+
+	for {
+		_, err := reader.ReadBytes('\n')
+		if err != nil {
+			break
+		}
+
+		//log.Print(string(line))
+		//log.Print("\n")
+	}
+
+	// TODO: implement progress bar through an chan
+	log.Info().Msg("Mc server image is ready")
 }
 
 func ListContainer() ([]types.Container, error) {
