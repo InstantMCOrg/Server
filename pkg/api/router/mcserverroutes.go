@@ -3,14 +3,27 @@ package router
 import (
 	"encoding/json"
 	"github.com/instantminecraft/server/pkg/manager"
+	"github.com/instantminecraft/server/pkg/models"
+	"github.com/instantminecraft/server/pkg/utils"
 	"net/http"
 )
 
 func getPreparedServer(w http.ResponseWriter, r *http.Request) {
+	container, err := manager.GetPreparedMcServerContainer()
+	if err != nil {
+		sendError("Couldn't fetch prepared server", w, http.StatusInternalServerError)
+		return
+	}
+
+	var result = []models.PreparedContainer{}
+
+	for nr, curContainer := range container {
+		mcVersion := utils.GetMcVersionFromContainer(curContainer)
+		result = append(result, models.PreparedContainer{Number: nr, McVersion: mcVersion})
+	}
+
 	data, _ := json.Marshal(map[string]interface{}{
-		"server": map[string]interface{}{
-			"running": false,
-		},
+		"prepared_server": result,
 	})
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
