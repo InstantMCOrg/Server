@@ -2,6 +2,7 @@ package manager
 
 import (
 	"errors"
+	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/instantminecraft/server/pkg/api/mcserverapi"
 	"github.com/instantminecraft/server/pkg/config"
@@ -58,14 +59,16 @@ func PrepareMcServer() {
 func prepareMcServerSync() {
 	port := GeneratePort()
 	AddPortToUsageList(port)
-	noAutoStartEnv := []string{"autostart=false"}
+	authKey := GenerateAuthKeyForMcServer()
+	env := []string{"autostart=false", fmt.Sprintf("auth=%s", authKey)}
 
 	containerName := config.WaitingReadyContainerName
 	preparedContainer, err := GetPreparedMcServerContainer()
 	if err == nil && len(preparedContainer) > 0 {
 		containerName = config.WaitingReadyContainerNr(len(preparedContainer))
 	}
-	containerID, err := RunContainer(config.LatestImageName, containerName, port, noAutoStartEnv)
+
+	containerID, err := RunContainer(config.LatestImageName, containerName, port, env)
 	if err != nil {
 		log.Error().Err(err).Msg("Couldn't start preparation docker container. Retrying in 2 seconds...")
 		time.Sleep(2 * time.Second)
@@ -74,14 +77,15 @@ func prepareMcServerSync() {
 		return
 	}
 
-	serverStatus, err := mcserverapi.GetServerStatus(port)
+	serverStatus, err := mcserverapi.GetServerStatus(port, authKey)
 	if serverStatus.Server.Running == false {
 		// we need to prepare the minecraft world
-		mcserverapi.WaitForMcWorldBootUp(port)
+		mcserverapi.WaitForMcWorldBootUp(port, authKey)
 		// TODO error handling
 	}
 
 	// Now we need to pause the container because the mc world needs to stop
+	SaveAuthKey(containerID, authKey)
 	PauseContainer(containerID)
 	log.Info().Msg("A mc server container has been prepared")
 	mcServerPreperationWG.Done()

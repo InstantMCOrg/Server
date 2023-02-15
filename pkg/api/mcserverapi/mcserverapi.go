@@ -2,13 +2,20 @@ package mcserverapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/instantminecraft/server/pkg/models"
 	"net/http"
-	"strconv"
 )
 
-func GetServerStatus(port int) (models.ServerStatus, error) {
-	resp, err := http.Get("http://localhost:" + strconv.Itoa(port))
+const authHeader = "auth"
+
+func GetServerStatus(port int, authKey string) (models.ServerStatus, error) {
+	client := &http.Client{}
+	url := fmt.Sprintf("http://localhost:%d", port)
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set(authHeader, authKey)
+	resp, err := client.Do(req)
+
 	if err != nil {
 		return models.ServerStatus{}, err
 	}
@@ -22,8 +29,13 @@ func GetServerStatus(port int) (models.ServerStatus, error) {
 	return serverResponse, err
 }
 
-func WaitForMcWorldBootUp(port int) error {
-	_, err := http.Get("http://localhost:" + strconv.Itoa(port) + "/server/start?blocking=true")
+func WaitForMcWorldBootUp(port int, authKey string) error {
+	client := &http.Client{}
+	url := fmt.Sprintf("http://localhost:%d/server/start?blocking=true", port)
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set(authHeader, authKey)
+	_, err := client.Do(req)
+
 	if err != nil {
 		return err
 	}
