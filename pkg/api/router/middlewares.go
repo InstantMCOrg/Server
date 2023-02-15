@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/instantminecraft/server/pkg/db"
 	"net/http"
 )
 
@@ -8,8 +9,11 @@ func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if r.URL.Path != "/" && r.URL.Path != "/login" {
-			// Todo
-			if r.Header.Get("auth") != "" {
+			clientAuthKey := r.Header.Get("auth")
+			// searching for session...
+			_, err := db.GetSession(clientAuthKey)
+
+			if err != nil {
 				// Authentication failed
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return

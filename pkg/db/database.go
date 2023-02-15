@@ -44,3 +44,9 @@ func CreateSession(userModel *models.User) (string, error) {
 	}).Error
 	return sessionToken, err
 }
+
+func GetSession(token string) (models.Session, error) {
+	var session models.Session
+	err := db.First(&session, "token = ?", token).Error
+	return session, err
+}
