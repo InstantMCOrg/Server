@@ -92,6 +92,10 @@ func ResumeContainer(containerID string) error {
 	return cli.ContainerUnpause(ctx, containerID)
 }
 
+func RenameContainer(containerID string, name string) error {
+	return cli.ContainerRename(ctx, containerID, name)
+}
+
 func IsContainerPaused(containerID string) (bool, error) {
 	containerStats, err := cli.ContainerInspect(ctx, containerID)
 	if err != nil {
