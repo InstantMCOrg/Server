@@ -4,7 +4,13 @@ import "gorm.io/gorm"
 
 type User struct {
 	gorm.Model
-	ID       string
 	Username string
 	Password string
+}
+
+type Session struct {
+	gorm.Model
+	Token  string
+	UserID int
+	User   User
 }
