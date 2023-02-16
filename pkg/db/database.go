@@ -12,7 +12,9 @@ var db *gorm.DB
 const sessionTokenLength = 32
 
 func Init() {
-	dbConnection, err := gorm.Open(sqlite.Open("data.db"), &gorm.Config{})
+	dbConnection, err := gorm.Open(sqlite.Open("data.db"), &gorm.Config{
+		//Logger: logger.Default.LogMode(logger.Silent), // silent logger
+	})
 	db = dbConnection
 	if err != nil {
 		panic(err)

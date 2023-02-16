@@ -41,6 +41,8 @@ func startServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	serverID := manager.GenerateMcServerID(name)
+
 	// TODO handle mc version request
 
 	alreadyPreparedContainerId := r.FormValue("container_id")

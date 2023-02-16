@@ -154,6 +154,10 @@ func generateContainerName(serverId string) string {
 	return config.ContainerBaseName + serverId
 }
 
+func GenerateMcServerID(serverName string) string {
+	return generateId(serverName)
+}
+
 func StartMcServer(containerID string, name string) (models.McServerContainer, error) {
 	log.Info().Msgf("Looking for prepared container %s...", containerID)
 	preparedMcServer, err := GetPreparedMcServerContainer()
