@@ -3,8 +3,11 @@ package mcserverapi
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"github.com/instantminecraft/server/pkg/models"
 	"net/http"
+	"net/url"
+	"strconv"
 )
 
 const authHeader = "auth"
@@ -40,4 +43,44 @@ func WaitForMcWorldBootUp(port int, authKey string) error {
 		return err
 	}
 	return nil
+}
+
+func GetWorldGenerationChan(port int, authKey string) (chan int, error) {
+	host := fmt.Sprintf("localhost:%d", port)
+	u := url.URL{Scheme: "ws", Host: host, Path: "/server/world/creation_status"}
+
+	header := http.Header{}
+	header.Add("auth", authKey)
+	connection, _, err := websocket.DefaultDialer.Dial(u.String(), header)
+	if err != nil {
+		return nil, err
+	}
+
+	worldGenerationChan := make(chan int)
+
+	go func() {
+		for {
+			var data map[string]interface{}
+			connection.ReadJSON(&data)
+			if data["status"] == "already running" {
+				worldGenerationChan <- 100
+				break
+			} else if data["status"] == "preparing" {
+				rawStatusString := fmt.Sprintf("%v", data["world_status"])
+				status, _ := strconv.Atoi(rawStatusString)
+				select {
+				case worldGenerationChan <- status:
+					break
+				default:
+					break
+				}
+				if status == 100 {
+					break
+				}
+			}
+		}
+		connection.Close()
+	}()
+
+	return worldGenerationChan, nil
 }
