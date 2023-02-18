@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/instantminecraft/server/pkg/api/mcserverapi"
 	"github.com/instantminecraft/server/pkg/config"
 	"github.com/instantminecraft/server/pkg/enums"
 	"github.com/instantminecraft/server/pkg/manager"
 	"github.com/instantminecraft/server/pkg/models"
 	"github.com/instantminecraft/server/pkg/utils"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
 	"net/http"
 )
@@ -93,22 +95,37 @@ func startServer(w http.ResponseWriter, r *http.Request) {
 			manager.EnsureImageIsReady(config.ImageWithMcVersion(mcVersion))
 
 			// we need to prepare a server with given mc version
-			utils.ChanSendString(preparationChan, "Starting server preparation") //preparationChan <- "Starting server preparation"
-			manager.PrepareMcServer(mcVersion)
-			utils.ChanSendString(preparationChan, "Waiting for preparation end") //preparationChan <- "Waiting for preparation end"
+			utils.ChanSendString(preparationChan, "Starting server preparation")
+
+			port := manager.GeneratePort()
+			authKey := manager.GenerateAuthKeyForMcServer()
+			manager.PrepareMcServer(mcVersion, models.McServerPreparationConfig{Port: port, AuthKey: authKey})
+			worldGenerationChan, err := mcserverapi.GetWorldGenerationChan(port, authKey)
+			if err != nil {
+				log.Warn().Err(err).Msgf("Couldn't connect to world generation ws of container on port %d", port)
+			} else {
+				for {
+					worldGenerationPercent := <-worldGenerationChan
+					utils.ChanSendString(preparationChan, fmt.Sprintf("Preparing world %d%%", worldGenerationPercent))
+					if worldGenerationPercent == 100 {
+						break
+					}
+				}
+			}
+
+			utils.ChanSendString(preparationChan, "Waiting for preparation end")
 			manager.WaitForTargetServerPrepared(mcVersion)
 		}
 		readyContainer, _ := manager.GetPreparedMcServerContainerMcVersion(mcVersion)
 
 		// run a prepared server
-		utils.ChanSendString(preparationChan, "Starting server") //preparationChan <- "Starting server"
+		utils.ChanSendString(preparationChan, "Starting server")
 		_, err := manager.StartMcServer(readyContainer[0].ID, name)
 		if err != nil {
-			fmt.Println("TODO", err)
-			// TODO
+			utils.ChanSendString(preparationChan, "Couldn't start server")
 			return
 		}
-		utils.ChanSendString(preparationChan, "Done") //preparationChan <- "Done"
+		utils.ChanSendString(preparationChan, "Done")
 		manager.RemovePreparingServer(serverID)
 	}()
 }
