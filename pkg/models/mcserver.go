@@ -32,3 +32,8 @@ type ServerStatus struct {
 		Running bool `json:"running"`
 	} `json:"server"`
 }
+
+type McServerPreparationConfig struct {
+	Port    int
+	AuthKey string
+}

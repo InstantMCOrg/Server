@@ -55,7 +55,7 @@ func InitMCServerManagement() {
 	// check if a container needs to be prepared
 	if len(preparedContainer) == 0 {
 		log.Info().Msg("Preparing a mc server in the background...")
-		PrepareMcServer(config.LatestMcVersion)
+		PrepareMcServer(config.LatestMcVersion, models.McServerPreparationConfig{})
 	} else if len(preparedContainer) > 0 {
 		// we need obtain the auth keys
 		authKeys := ObtainAuthKeys(preparedContainer)
@@ -66,7 +66,7 @@ func InitMCServerManagement() {
 }
 
 // PrepareMcServer Creates a mc server container, setup the mc world and pause the container for later deployment
-func PrepareMcServer(mcVersion string) {
+func PrepareMcServer(mcVersion string, preparationConfig models.McServerPreparationConfig) {
 	mcServerPreparationWG.Add(1)
 	wg, ok := mcServerVersionPreparationWG[mcVersion]
 	if !ok {
@@ -75,13 +75,24 @@ func PrepareMcServer(mcVersion string) {
 		mcServerVersionPreparationWG[mcVersion] = wg
 	}
 	wg.Add(1)
-	go prepareMcServerSync(mcVersion)
+	go prepareMcServerSync(mcVersion, preparationConfig)
 }
 
-func prepareMcServerSync(mcVersion string) {
-	port := GeneratePort()
+func prepareMcServerSync(mcVersion string, preparationConfig models.McServerPreparationConfig) {
+	var port int
+	if preparationConfig.Port == 0 {
+		port = GeneratePort()
+	} else {
+		port = preparationConfig.Port
+	}
 	AddPortToUsageList(port)
-	authKey := GenerateAuthKeyForMcServer()
+	var authKey string
+	if preparationConfig.AuthKey == "" {
+		authKey = GenerateAuthKeyForMcServer()
+	} else {
+		authKey = preparationConfig.AuthKey
+	}
+
 	env := []string{"autostart=false", fmt.Sprintf("%s=%s", authEnvKey, authKey)}
 
 	containerName := config.WaitingReadyContainerName
@@ -95,7 +106,7 @@ func prepareMcServerSync(mcVersion string) {
 		log.Error().Err(err).Msg("Couldn't start preparation docker container. Retrying in 2 seconds...")
 		time.Sleep(2 * time.Second)
 		RemovePortFromUsageList(port)
-		prepareMcServerSync(mcVersion)
+		prepareMcServerSync(mcVersion, preparationConfig)
 		return
 	}
 
