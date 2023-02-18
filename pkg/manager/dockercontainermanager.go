@@ -30,11 +30,20 @@ func InitDockerSystem() {
 }
 
 func ensureMCServerImageIsReady() {
-	pullResp, err := cli.ImagePull(ctx, config.LatestImageName, types.ImagePullOptions{})
+	EnsureImageIsReady(config.LatestImageName)
+
+	// TODO: implement progress bar through an chan
+	log.Info().Msg("Mc server image is ready")
+}
+
+// EnsureImageIsReady blocks the execution until the requested docker image is downloaded and ready
+func EnsureImageIsReady(imageName string) {
+	pullResp, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
 	if err != nil {
-		log.Error().Err(err).Msgf("Oh oh! An error occurred while downloading the newest %s image. Retrying in 2 seconds...", config.LatestImageName)
+		log.Error().Err(err).Msgf("Oh oh! An error occurred while downloading the newest %s image. Retrying in 2 seconds...", imageName)
 		time.Sleep(2 * time.Second)
-		ensureMCServerImageIsReady()
+		EnsureImageIsReady(imageName)
+		return
 	}
 	reader := bufio.NewReader(pullResp)
 	defer pullResp.Close()
@@ -49,9 +58,6 @@ func ensureMCServerImageIsReady() {
 		//log.Print(string(line))
 		//log.Print("\n")
 	}
-
-	// TODO: implement progress bar through an chan
-	log.Info().Msg("Mc server image is ready")
 }
 
 func ListContainer() ([]types.Container, error) {
