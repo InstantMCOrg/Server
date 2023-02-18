@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
 	"net/http"
+	"sync"
 )
 
 func getPreparedServer(w http.ResponseWriter, r *http.Request) {
@@ -99,7 +100,11 @@ func startServer(w http.ResponseWriter, r *http.Request) {
 
 			port := manager.GeneratePort()
 			authKey := manager.GenerateAuthKeyForMcServer()
-			manager.PrepareMcServer(mcVersion, models.McServerPreparationConfig{Port: port, AuthKey: authKey})
+
+			coreBootUpWaitGroup := sync.WaitGroup{}
+			coreBootUpWaitGroup.Add(1)
+			manager.PrepareMcServer(mcVersion, models.McServerPreparationConfig{Port: port, AuthKey: authKey, CoreBootUpWG: &coreBootUpWaitGroup})
+			coreBootUpWaitGroup.Wait()
 			worldGenerationChan, err := mcserverapi.GetWorldGenerationChan(port, authKey)
 			if err != nil {
 				log.Warn().Err(err).Msgf("Couldn't connect to world generation ws of container on port %d", port)

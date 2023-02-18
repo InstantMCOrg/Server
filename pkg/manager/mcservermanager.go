@@ -110,6 +110,9 @@ func prepareMcServerSync(mcVersion string, preparationConfig models.McServerPrep
 		return
 	}
 
+	if preparationConfig.CoreBootUpWG != nil {
+		preparationConfig.CoreBootUpWG.Done()
+	}
 	serverStatus, err := mcserverapi.GetServerStatus(port, authKey)
 	if serverStatus.Server.Running == false {
 		// we need to prepare the minecraft world

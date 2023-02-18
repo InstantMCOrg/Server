@@ -1,6 +1,9 @@
 package models
 
-import "github.com/instantminecraft/server/pkg/enums"
+import (
+	"github.com/instantminecraft/server/pkg/enums"
+	"sync"
+)
 
 type McServerContainer struct {
 	ID          string             `json:"id"`
@@ -33,7 +36,10 @@ type ServerStatus struct {
 	} `json:"server"`
 }
 
+// McServerPreparationConfig
+// ´CoreBootUpWG´ waits until the http server started
 type McServerPreparationConfig struct {
-	Port    int
-	AuthKey string
+	Port         int
+	AuthKey      string
+	CoreBootUpWG *sync.WaitGroup
 }
