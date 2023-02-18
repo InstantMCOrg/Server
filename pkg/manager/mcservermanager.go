@@ -6,6 +6,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/instantminecraft/server/pkg/api/mcserverapi"
 	"github.com/instantminecraft/server/pkg/config"
+	"github.com/instantminecraft/server/pkg/enums"
 	"github.com/instantminecraft/server/pkg/models"
 	"github.com/instantminecraft/server/pkg/utils"
 	"github.com/rs/zerolog/log"
@@ -256,5 +257,5 @@ func StartMcServer(containerID string, name string) (models.McServerContainer, e
 	err = ResumeContainer(containerID)
 	mcVersion := utils.GetMcVersionFromContainer(targetContainer)
 	port := utils.GetPortFromContainer(targetContainer)
-	return models.McServerContainer{ContainerID: containerID, Name: name, ID: id, Port: port, McVersion: mcVersion, Running: true}, err
+	return models.McServerContainer{ContainerID: containerID, Name: name, ID: id, Port: port, McVersion: mcVersion, Status: enums.Running}, err
 }
