@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/instantminecraft/server/pkg/config"
+	"github.com/instantminecraft/server/pkg/enums"
 	"github.com/instantminecraft/server/pkg/manager"
 	"github.com/instantminecraft/server/pkg/models"
 	"github.com/instantminecraft/server/pkg/utils"
@@ -73,6 +74,15 @@ func startServer(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write(data)
 		return
+	} else {
+		data, _ := json.Marshal(map[string]interface{}{
+			"status":     enums.Preparing.String(),
+			"id":         serverID,
+			"name":       name,
+			"mc_version": mcVersion,
+		})
+		w.WriteHeader(http.StatusOK)
+		w.Write(data)
 	}
 
 	go func() {
