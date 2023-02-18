@@ -10,6 +10,7 @@ type McServerContainer struct {
 	Name        string             `json:"name"`
 	ContainerID string             `json:"container_id"`
 	McVersion   string             `json:"mc_version"`
+	RamSizeMB   int                `json:"ram_size_mb"`
 	Port        int                `json:"port"`
 	Status      enums.ServerStatus `json:"Status"`
 }
@@ -20,12 +21,14 @@ func (mcServer *McServerContainer) ToClientJson() interface{} {
 		Name      string `json:"name"`
 		McVersion string `json:"mc_version"`
 		Port      int    `json:"port"`
+		RamSizeMB int    `json:"ram_size_mb"`
 		Status    string `json:"status"`
 	}{
 		ID:        mcServer.ID,
 		Name:      mcServer.Name,
 		McVersion: mcServer.McVersion,
 		Port:      mcServer.Port,
+		RamSizeMB: mcServer.RamSizeMB,
 		Status:    mcServer.Status.String(),
 	}
 }
@@ -41,5 +44,6 @@ type ServerStatus struct {
 type McServerPreparationConfig struct {
 	Port         int
 	AuthKey      string
+	RamSizeMB    int
 	CoreBootUpWG *sync.WaitGroup
 }
