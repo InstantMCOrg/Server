@@ -221,6 +221,10 @@ func RemovePreparingServer(serverID string) {
 	preparingMcContainer = newMap
 }
 
+func GetPreparingServerChan(serverID string) chan string {
+	return preparingMcContainer[serverID]
+}
+
 func StartMcServer(containerID string, name string) (models.McServerContainer, error) {
 	log.Info().Msgf("Looking for prepared container %s...", containerID)
 	preparedMcServer, err := GetPreparedMcServerContainer()

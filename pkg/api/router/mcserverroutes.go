@@ -110,3 +110,30 @@ func startServer(w http.ResponseWriter, r *http.Request) {
 		utils.ChanSendString(preparationChan, "Done") //preparationChan <- "Done"
 	}()
 }
+
+func serverStartStatus(w http.ResponseWriter, r *http.Request) {
+	serverID := mux.Vars(r)["serverid"]
+	prepChan := manager.GetPreparingServerChan(serverID)
+	if prepChan == nil {
+		// channel not found, probably serverID not found
+		sendError("Server not found", w, http.StatusNotFound)
+		return
+	}
+
+	conn, err := Upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		sendError("Couldn't establish a websocket connection", w, http.StatusBadRequest)
+		return
+	}
+
+	for {
+		message := <-prepChan
+		conn.WriteJSON(map[string]string{
+			"message": message,
+		})
+		if message == "Done" {
+			break
+		}
+	}
+	conn.Close()
+}

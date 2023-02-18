@@ -18,7 +18,7 @@ func Register() *mux.Router {
 
 	r.HandleFunc("/server/prepared", getPreparedServer).Methods("GET")
 	r.HandleFunc("/server/start", startServer).Methods("POST")
-	r.HandleFunc("/server/start/status/{serverid}", startServer).Methods("POST")
+	r.HandleFunc("/server/start/status/{serverid}", serverStartStatus).Methods("GET")
 	return r
 }
 
