@@ -9,43 +9,52 @@ import (
 	"github.com/instantminecraft/server/pkg/models"
 	"github.com/instantminecraft/server/pkg/utils"
 	"github.com/rs/zerolog/log"
+	"strings"
 	"sync"
 	"time"
 )
 
 var mcServer []models.McServerContainer
-var mcServerPreperationWG sync.WaitGroup
+var mcServerPreparationWG sync.WaitGroup
+
+// mcServerVersionPreparationWg defines a waitgroup for a mc version
+var mcServerVersionPreparationWG = map[string]*sync.WaitGroup{}
+
+// the variable has the following structure: map[serverID]preperation status channel
+var preparingMcContainer = map[string]chan string{}
 
 const authEnvKey = "auth"
 
 // InitMCServerManagement Setup docker connection and retrieve already running minecraft server container instances
 func InitMCServerManagement() {
-	possibleUnfinishedPrepContainer, err := ListContainersByNameStart(config.WaitingReadyContainerName)
+	containerList, err := ListContainer()
+	var preparedContainer []types.Container
 	if err != nil {
 		log.Fatal().Err(err).Msg("Couldn't connect to docker daemon")
 		panic(err)
 	}
 
-	for _, container := range possibleUnfinishedPrepContainer {
-		// check if container is unfinished
-		isPaused, err := IsContainerPaused(container.ID)
-		if err != nil || !isPaused {
-			// container needs to be removed because we can't be sure in what state the container is
-			KillContainer(container.ID)
-			RemovePortFromUsageList(int(container.Ports[0].PublicPort))
-			continue
+	for _, container := range containerList {
+		if IsContainerPreparationServer(container) {
+			// check if container is unfinished
+			isPaused, err := IsContainerPaused(container.ID)
+			if err != nil || !isPaused {
+				// container needs to be removed because we can't be sure in what state the container is
+				KillContainer(container.ID)
+				RemovePortFromUsageList(int(container.Ports[0].PublicPort))
+				continue
+			}
+			preparedContainer = append(preparedContainer, container)
 		}
+
 		// reserve port for this container
 		AddPortToUsageList(int(container.Ports[0].PublicPort))
 	}
 
 	// check if a container needs to be prepared
-	preparedContainer, err := GetPreparedMcServerContainer()
-	if err != nil {
-		log.Error().Err(err).Msg("Couldn't fetch already prepared containers:")
-	} else if len(preparedContainer) == 0 {
+	if len(preparedContainer) == 0 {
 		log.Info().Msg("Preparing a mc server in the background...")
-		PrepareMcServer()
+		PrepareMcServer(config.LatestMcVersion)
 	} else if len(preparedContainer) > 0 {
 		// we need obtain the auth keys
 		authKeys := ObtainAuthKeys(preparedContainer)
@@ -56,12 +65,19 @@ func InitMCServerManagement() {
 }
 
 // PrepareMcServer Creates a mc server container, setup the mc world and pause the container for later deployment
-func PrepareMcServer() {
-	mcServerPreperationWG.Add(1)
-	go prepareMcServerSync()
+func PrepareMcServer(mcVersion string) {
+	mcServerPreparationWG.Add(1)
+	wg, ok := mcServerVersionPreparationWG[mcVersion]
+	if !ok {
+		var newWaitGroup sync.WaitGroup
+		wg = &newWaitGroup
+		mcServerVersionPreparationWG[mcVersion] = wg
+	}
+	wg.Add(1)
+	go prepareMcServerSync(mcVersion)
 }
 
-func prepareMcServerSync() {
+func prepareMcServerSync(mcVersion string) {
 	port := GeneratePort()
 	AddPortToUsageList(port)
 	authKey := GenerateAuthKeyForMcServer()
@@ -73,12 +89,12 @@ func prepareMcServerSync() {
 		containerName = config.WaitingReadyContainerNr(len(preparedContainer))
 	}
 
-	containerID, err := RunContainer(config.LatestImageName, containerName, port, env)
+	containerID, err := RunContainer(config.ImageWithMcVersion(mcVersion), containerName, port, env)
 	if err != nil {
 		log.Error().Err(err).Msg("Couldn't start preparation docker container. Retrying in 2 seconds...")
 		time.Sleep(2 * time.Second)
 		RemovePortFromUsageList(port)
-		prepareMcServerSync()
+		prepareMcServerSync(mcVersion)
 		return
 	}
 
@@ -92,8 +108,13 @@ func prepareMcServerSync() {
 	// Now we need to pause the container because the mc world needs to stop
 	SaveAuthKey(containerID, authKey)
 	PauseContainer(containerID)
-	log.Info().Msg("A mc server container has been prepared")
-	mcServerPreperationWG.Done()
+	log.Info().Msgf("A mc %s server container has been prepared", mcVersion)
+	mcServerPreparationWG.Done()
+	mcServerVersionPreparationWG[mcVersion].Done()
+}
+
+func IsContainerPreparationServer(container types.Container) bool {
+	return len(container.Names) > 0 && strings.HasPrefix(container.Names[0], "/"+config.WaitingReadyContainerName)
 }
 
 // GetPreparedMcServerContainer Returns a list of Container which minecraft world is setup and the container state is paused
@@ -115,6 +136,25 @@ func GetPreparedMcServerContainer() ([]types.Container, error) {
 	return readyContainer, nil
 }
 
+// GetPreparedMcServerContainerMcVersion Returns a list of prepared container with a specific mc version
+func GetPreparedMcServerContainerMcVersion(targetMcVersion string) ([]types.Container, error) {
+	readyContainer, err := GetPreparedMcServerContainer()
+	if err != nil {
+		return nil, err
+	}
+
+	var containerWithTargetMcVersion []types.Container
+
+	for _, container := range readyContainer {
+		mcVersion := utils.GetMcVersionFromContainer(container)
+		if mcVersion == targetMcVersion {
+			containerWithTargetMcVersion = append(containerWithTargetMcVersion, container)
+		}
+	}
+
+	return containerWithTargetMcVersion, nil
+}
+
 func PreparedMcServerContainerExists(containerId string) (bool, error) {
 	container, err := ListContainersByNameStart(config.WaitingReadyContainerName)
 	if err != nil {
@@ -132,8 +172,14 @@ func PreparedMcServerContainerExists(containerId string) (bool, error) {
 	return false, nil
 }
 
-func WaitForFinsishedPreparing() {
-	mcServerPreperationWG.Wait()
+func WaitForFinishedPreparing() {
+	mcServerPreparationWG.Wait()
+}
+
+func WaitForTargetServerPrepared(mcVersion string) {
+	if wg, ok := mcServerVersionPreparationWG[mcVersion]; ok {
+		wg.Wait()
+	}
 }
 
 func GetRunningMcServer() ([]models.McServerContainer, error) {
@@ -156,6 +202,22 @@ func generateContainerName(serverId string) string {
 
 func GenerateMcServerID(serverName string) string {
 	return generateId(serverName)
+}
+
+func AddPreparingServer(serverID string) chan string {
+	preparingMcContainer[serverID] = make(chan string)
+	return preparingMcContainer[serverID]
+}
+
+func RemovePreparingServer(serverID string) {
+	newMap := map[string]chan string{}
+	for k, v := range preparingMcContainer {
+		if k != serverID {
+			newMap[k] = v
+		}
+	}
+
+	preparingMcContainer = newMap
 }
 
 func StartMcServer(containerID string, name string) (models.McServerContainer, error) {

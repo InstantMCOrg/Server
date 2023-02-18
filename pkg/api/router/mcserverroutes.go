@@ -2,9 +2,12 @@ package router
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/instantminecraft/server/pkg/config"
 	"github.com/instantminecraft/server/pkg/manager"
 	"github.com/instantminecraft/server/pkg/models"
 	"github.com/instantminecraft/server/pkg/utils"
+	"golang.org/x/exp/slices"
 	"net/http"
 )
 
@@ -41,36 +44,59 @@ func startServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serverID := manager.GenerateMcServerID(name)
-
-	// TODO handle mc version request
-
-	alreadyPreparedContainerId := r.FormValue("container_id")
-	useAlreadyPreparedServer := alreadyPreparedContainerId != ""
-
-	if useAlreadyPreparedServer {
-		// Check if prepared server exists
-		preparedContainerExists, err := manager.PreparedMcServerContainerExists(alreadyPreparedContainerId)
-		if err != nil {
-			sendError("Couldn't fetch prepared container", w, http.StatusInternalServerError)
-			return
-		} else if !preparedContainerExists {
-			sendError("Container with given ID doesn't exist", w, http.StatusBadRequest)
-			return
-		}
-	} else {
-		// We need to prepare a server
-		// TODO
-	}
-
-	mcServer, err := manager.StartMcServer(alreadyPreparedContainerId, name)
-	if err != nil {
-		sendError("Couldn't start mc server", w, http.StatusInternalServerError)
+	// check if requested mc version is valid
+	if !slices.Contains(config.AvailableVersions, mcVersion) {
+		// Requested mc version not valid
+		sendError(fmt.Sprintf("mc_version %s not available", mcVersion), w, http.StatusBadRequest)
 		return
 	}
 
-	data, _ := json.Marshal(mcServer)
+	serverID := manager.GenerateMcServerID(name)
 
-	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+	preparationChan := manager.AddPreparingServer(serverID)
+
+	// Check if a prepared server with requested mc version exists
+	readyContainer, err := manager.GetPreparedMcServerContainerMcVersion(mcVersion)
+	if err != nil {
+		sendError("Couldn't fetch available server", w, http.StatusInternalServerError)
+		return
+	}
+
+	if len(readyContainer) > 0 {
+		// no need for preparation, we can start a mc server instance instantly
+		mcServer, err := manager.StartMcServer(readyContainer[0].ID, name)
+		if err != nil {
+			sendError("Couldn't start mc server", w, http.StatusInternalServerError)
+			return
+		}
+		data, _ := json.Marshal(mcServer.ToClientJson())
+		w.WriteHeader(http.StatusOK)
+		w.Write(data)
+		return
+	}
+
+	go func() {
+		if len(readyContainer) == 0 {
+			// We need to check if the docker image is prepared
+			utils.ChanSendString(preparationChan, "Preparing server preparation")
+			manager.EnsureImageIsReady(config.ImageWithMcVersion(mcVersion))
+
+			// we need to prepare a server with given mc version
+			utils.ChanSendString(preparationChan, "Starting server preparation") //preparationChan <- "Starting server preparation"
+			manager.PrepareMcServer(mcVersion)
+			utils.ChanSendString(preparationChan, "Waiting for preparation end") //preparationChan <- "Waiting for preparation end"
+			manager.WaitForTargetServerPrepared(mcVersion)
+		}
+		readyContainer, _ := manager.GetPreparedMcServerContainerMcVersion(mcVersion)
+
+		// run a prepared server
+		utils.ChanSendString(preparationChan, "Starting server") //preparationChan <- "Starting server"
+		_, err := manager.StartMcServer(readyContainer[0].ID, name)
+		if err != nil {
+			fmt.Println("TODO", err)
+			// TODO
+			return
+		}
+		utils.ChanSendString(preparationChan, "Done") //preparationChan <- "Done"
+	}()
 }
