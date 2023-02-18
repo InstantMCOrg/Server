@@ -3,6 +3,7 @@ package router
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/instantminecraft/server/pkg/config"
 	"github.com/instantminecraft/server/pkg/enums"
 	"github.com/instantminecraft/server/pkg/manager"
@@ -108,6 +109,7 @@ func startServer(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		utils.ChanSendString(preparationChan, "Done") //preparationChan <- "Done"
+		manager.RemovePreparingServer(serverID)
 	}()
 }
 
