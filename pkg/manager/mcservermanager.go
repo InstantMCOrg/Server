@@ -10,6 +10,8 @@ import (
 	"github.com/instantminecraft/server/pkg/models"
 	"github.com/instantminecraft/server/pkg/utils"
 	"github.com/rs/zerolog/log"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -66,6 +68,7 @@ func InitMCServerManagement() {
 }
 
 // PrepareMcServer Creates a mc server container, setup the mc world and pause the container for later deployment
+// World mount path has the following system: `<current dir>/worlds/<port of container>`
 func PrepareMcServer(mcVersion string, preparationConfig models.McServerPreparationConfig) {
 	mcServerPreparationWG.Add(1)
 	wg, ok := mcServerVersionPreparationWG[mcVersion]
@@ -101,7 +104,10 @@ func prepareMcServerSync(mcVersion string, preparationConfig models.McServerPrep
 		containerName = config.WaitingReadyContainerNr(len(preparedContainer))
 	}
 
-	containerID, err := RunContainer(config.ImageWithMcVersion(mcVersion), containerName, port, env)
+	currentPath, _ := os.Getwd()
+	targetWorldMountPath := filepath.Join(currentPath, "worlds", fmt.Sprintf("%d", port))
+
+	containerID, err := RunContainer(config.ImageWithMcVersion(mcVersion), containerName, port, env, targetWorldMountPath)
 	if err != nil {
 		log.Error().Err(err).Msg("Couldn't start preparation docker container. Retrying in 2 seconds...")
 		time.Sleep(2 * time.Second)

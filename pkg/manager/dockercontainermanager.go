@@ -2,6 +2,7 @@ package manager
 
 import (
 	"bufio"
+	"github.com/docker/docker/api/types/mount"
 	"strconv"
 	"strings"
 	"time"
@@ -83,7 +84,7 @@ func ListContainersByNameStart(namePrefix string) ([]types.Container, error) {
 // RunContainer Attempts to run a container with given arguments
 // Returns container ID as a string and nil if successful
 // Otherwise an empty string and an error
-func RunContainer(imageName string, containerName string, containerPort int, env []string) (string, error) {
+func RunContainer(imageName string, containerName string, containerPort int, env []string, worldMountPath string) (string, error) {
 	port := strconv.Itoa(config.McServerProxyPort) + "/tcp"
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image: imageName,
@@ -94,6 +95,13 @@ func RunContainer(imageName string, containerName string, containerPort int, env
 	}, &container.HostConfig{
 		PortBindings: nat.PortMap{
 			nat.Port(port): []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: strconv.Itoa(containerPort)}},
+		},
+		Mounts: []mount.Mount{
+			{
+				Type:   mount.TypeBind,
+				Source: worldMountPath,
+				Target: "/server/world",
+			},
 		},
 	}, nil, nil, containerName)
 
