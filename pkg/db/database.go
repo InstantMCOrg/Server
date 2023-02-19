@@ -4,6 +4,7 @@ import (
 	"github.com/instantminecraft/server/pkg/config"
 	"github.com/instantminecraft/server/pkg/models"
 	"github.com/instantminecraft/server/pkg/utils"
+	"github.com/rs/zerolog/log"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"path/filepath"
@@ -27,7 +28,19 @@ func Init() {
 	db.AutoMigrate(&models.User{})
 	db.AutoMigrate(&models.Session{})
 
-	//db.Create(&models.User{Username: "admin", Password: utils.SHA256([]byte("admin"))})
+	if err := createDefaultAdminUserIfNeeded(); err != nil {
+		log.Fatal().Err(err).Msg("Couldn't create default admin user")
+	}
+}
+
+func createDefaultAdminUserIfNeeded() error {
+	var users []models.User
+	err := db.Find(&users).Error
+	if len(users) == 0 {
+		err = db.Create(&models.User{Username: "admin", Password: utils.SHA256([]byte("admin"))}).Error
+	}
+
+	return err
 }
 
 // Login searches and returns a ´models.User´ struct if username and the sha256 password matches a record otherwise returns an error
