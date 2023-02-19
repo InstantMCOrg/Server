@@ -328,5 +328,6 @@ func StartMcServer(containerID string, name string) (models.McServerContainer, e
 	err = ResumeContainer(containerID)
 	mcVersion := utils.GetMcVersionFromContainer(targetContainer)
 	port := utils.GetPortFromContainer(targetContainer)
-	return models.McServerContainer{ContainerID: containerID, Name: name, ID: id, Port: port, McVersion: mcVersion, Status: enums.Running}, err
+	ram, _ := GetContainerRamSizeEnv(containerID)
+	return models.McServerContainer{ContainerID: containerID, Name: name, ID: id, Port: port, McVersion: mcVersion, Status: enums.Running, RamSizeMB: ram}, err
 }
