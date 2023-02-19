@@ -170,53 +170,48 @@ func startServer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	go func() {
-		if len(readyContainer) == 0 {
-			// We need to check if the docker image is prepared
-			utils.ChanSendString(preparationChan, "Preparing server preparation")
-			manager.EnsureImageIsReady(config.ImageWithMcVersion(mcVersion))
 
-			// we need to prepare a server with given mc version
-			utils.ChanSendString(preparationChan, "Starting server preparation")
+		// We need to check if the docker image is prepared
+		utils.ChanSendString(preparationChan, "Preparing server preparation")
+		manager.EnsureImageIsReady(config.ImageWithMcVersion(mcVersion))
 
-			port := manager.GeneratePort()
-			authKey := manager.GenerateAuthKeyForMcServer()
+		// we need to prepare a server with given mc version
+		utils.ChanSendString(preparationChan, "Starting server preparation")
 
-			coreBootUpWaitGroup := sync.WaitGroup{}
-			coreBootUpWaitGroup.Add(1)
-			manager.PrepareMcServer(mcVersion, models.McServerPreparationConfig{
-				Port:         port,
-				AuthKey:      authKey,
-				CoreBootUpWG: &coreBootUpWaitGroup,
-				RamSizeMB:    targetRamSize,
-				ServerID:     serverID,
-				AutoDeploy:   true,
-			})
-			coreBootUpWaitGroup.Wait()
-			worldGenerationChan, err := mcserverapi.GetWorldGenerationChan(port, authKey)
-			if err != nil {
-				log.Warn().Err(err).Msgf("Couldn't connect to world generation ws of container on port %d", port)
-			} else {
-				for {
-					worldGenerationPercent := <-worldGenerationChan
-					utils.ChanSendString(preparationChan, fmt.Sprintf("Preparing world %d%%", worldGenerationPercent))
-					if worldGenerationPercent == 100 {
-						break
-					}
+		port := manager.GeneratePort()
+		authKey := manager.GenerateAuthKeyForMcServer()
+
+		coreBootUpWaitGroup := sync.WaitGroup{}
+		coreBootUpWaitGroup.Add(1)
+		manager.PrepareMcServer(mcVersion, models.McServerPreparationConfig{
+			Port:         port,
+			AuthKey:      authKey,
+			CoreBootUpWG: &coreBootUpWaitGroup,
+			RamSizeMB:    targetRamSize,
+			ServerID:     serverID,
+			AutoDeploy:   true,
+		})
+		coreBootUpWaitGroup.Wait()
+		worldGenerationChan, err := mcserverapi.GetWorldGenerationChan(port, authKey)
+		if err != nil {
+			log.Warn().Err(err).Msgf("Couldn't connect to world generation ws of container on port %d", port)
+		} else {
+			for {
+				worldGenerationPercent := <-worldGenerationChan
+				utils.ChanSendString(preparationChan, fmt.Sprintf("Preparing world %d%%", worldGenerationPercent))
+				if worldGenerationPercent == 100 {
+					break
 				}
 			}
-
-			utils.ChanSendString(preparationChan, "Waiting for preparation end")
-			manager.WaitForTargetServerPrepared(mcVersion)
 		}
-		readyContainer, _ := manager.GetPreparedMcServerContainerMcVersion(mcVersion)
 
-		// run a prepared server
-		utils.ChanSendString(preparationChan, "Starting server")
-		mcServer, err := manager.StartMcServer(readyContainer[0].ID, name)
+		utils.ChanSendString(preparationChan, "Waiting for preparation end")
+		manager.WaitForTargetServerPrepared(mcVersion) // TODO should be migrated to dedicated sync.WaitGroup
+		mcServer, err := manager.GetMcServerContainerByServerID(serverID, name)
 		if err != nil {
-			utils.ChanSendString(preparationChan, "Couldn't start server")
-			return
+			utils.ChanSendString(preparationChan, "Couldn't end preparation")
 		}
+
 		if err := db.AddMcServerContainer(&user, &mcServer); err != nil {
 			utils.ChanSendString(preparationChan, "Couldn't add server to database")
 			return
