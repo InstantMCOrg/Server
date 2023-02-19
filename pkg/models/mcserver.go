@@ -6,7 +6,7 @@ import (
 )
 
 type McServerContainer struct {
-	ID          string             `json:"id"`
+	ServerID    string             `json:"server_id"`
 	Name        string             `json:"name"`
 	ContainerID string             `json:"container_id"`
 	McVersion   string             `json:"mc_version"`
@@ -15,16 +15,20 @@ type McServerContainer struct {
 	Status      enums.ServerStatus `json:"Status"`
 }
 
+func (mcServer *McServerContainer) Self() *McServerContainer {
+	return mcServer
+}
+
 func (mcServer *McServerContainer) ToClientJson() interface{} {
 	return struct {
-		ID        string `json:"id"`
+		ServerID  string `json:"server_id"`
 		Name      string `json:"name"`
 		McVersion string `json:"mc_version"`
 		Port      int    `json:"port"`
 		RamSizeMB int    `json:"ram_size_mb"`
 		Status    string `json:"status"`
 	}{
-		ID:        mcServer.ID,
+		ServerID:  mcServer.ServerID,
 		Name:      mcServer.Name,
 		McVersion: mcServer.McVersion,
 		Port:      mcServer.Port,

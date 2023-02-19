@@ -14,3 +14,9 @@ type Session struct {
 	UserID int
 	User   User
 }
+
+type DBMcServerContainer struct {
+	gorm.Model
+	UserID int
+	McServerContainer
+}

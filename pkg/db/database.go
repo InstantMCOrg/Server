@@ -27,6 +27,7 @@ func Init() {
 	// Migrate schemas
 	db.AutoMigrate(&models.User{})
 	db.AutoMigrate(&models.Session{})
+	db.AutoMigrate(&models.DBMcServerContainer{})
 
 	if err := createDefaultAdminUserIfNeeded(); err != nil {
 		log.Fatal().Err(err).Msg("Couldn't create default admin user")
@@ -86,4 +87,20 @@ func UpdatePassword(user *models.User, newPassword string) error {
 		return err
 	}
 	return db.Delete(&models.Session{}, "user_id = ?", user.ID).Error
+}
+
+func AddMcServerContainer(user *models.User, mcContainer *models.McServerContainer) error {
+	return db.Create(&models.DBMcServerContainer{UserID: int(user.ID), McServerContainer: *mcContainer}).Error
+}
+
+func GetSavedMcServer() ([]models.DBMcServerContainer, error) {
+	var result []models.DBMcServerContainer
+	err := db.Find(&result).Error
+	return result, err
+}
+
+func GetMcServerData(serverID string) (models.DBMcServerContainer, error) {
+	var result models.DBMcServerContainer
+	err := db.First(&result, "server_id = ?", serverID).Error
+	return result, err
 }

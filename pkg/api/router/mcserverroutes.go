@@ -93,6 +93,11 @@ func startServer(w http.ResponseWriter, r *http.Request) {
 			sendError("Couldn't start mc server", w, http.StatusInternalServerError)
 			return
 		}
+		if err := db.AddMcServerContainer(&user, &mcServer); err != nil {
+			sendError("Couldn't add mc server to database", w, http.StatusInternalServerError)
+			return
+		}
+
 		data, _ := json.Marshal(mcServer.ToClientJson())
 		w.WriteHeader(http.StatusOK)
 		w.Write(data)
@@ -100,7 +105,7 @@ func startServer(w http.ResponseWriter, r *http.Request) {
 	} else {
 		data, _ := json.Marshal(map[string]interface{}{
 			"status":      enums.Preparing.String(),
-			"id":          serverID,
+			"server_id":   serverID,
 			"name":        name,
 			"ram_size_mb": targetRamSize,
 			"mc_version":  mcVersion,
@@ -150,11 +155,16 @@ func startServer(w http.ResponseWriter, r *http.Request) {
 
 		// run a prepared server
 		utils.ChanSendString(preparationChan, "Starting server")
-		_, err := manager.StartMcServer(readyContainer[0].ID, name)
+		mcServer, err := manager.StartMcServer(readyContainer[0].ID, name)
 		if err != nil {
 			utils.ChanSendString(preparationChan, "Couldn't start server")
 			return
 		}
+		if err := db.AddMcServerContainer(&user, &mcServer); err != nil {
+			utils.ChanSendString(preparationChan, "Couldn't add server to database")
+			return
+		}
+
 		utils.ChanSendString(preparationChan, "Done")
 		manager.RemovePreparingServer(serverID)
 	}()
