@@ -69,3 +69,21 @@ func GetSession(token string) (models.Session, error) {
 	err := db.First(&session, "token = ?", token).Error
 	return session, err
 }
+
+func GetUserFromToken(token string) (models.User, error) {
+	var session models.Session
+	token = utils.SHA256([]byte(token))
+	err := db.Preload("User").First(&session, "token = ?", token).Error
+	return session.User, err
+}
+
+// UpdatePassword updates the password of the target user and deletes all sessions from this user
+func UpdatePassword(user *models.User, newPassword string) error {
+	hashedNewPassword := utils.SHA256([]byte(newPassword))
+	user.Password = hashedNewPassword
+	err := db.Save(&user).Error
+	if err != nil {
+		return err
+	}
+	return db.Delete(&models.Session{}, "user_id = ?", user.ID).Error
+}

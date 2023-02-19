@@ -43,3 +43,38 @@ func loginRoute(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }
+
+func passwordChange(w http.ResponseWriter, r *http.Request) {
+	password := r.FormValue("password")
+
+	if password == "" {
+		sendError("Please provide \"password\"", w, http.StatusBadRequest)
+		return
+	}
+
+	user, err := getCurrentUser(r)
+	if err != nil {
+		// User doesn't exist
+		sendError("Could not fetch user", w, http.StatusUnauthorized)
+		return
+	}
+
+	if err := db.UpdatePassword(&user, password); err != nil {
+		sendError("Couldn't update user password", w, http.StatusInternalServerError)
+		return
+	}
+
+	// db.UpdatePassword deletes all sessions for the user, we need to create a new one
+	sessionToken, err := db.CreateSession(&user)
+	if err != nil {
+		sendError("Couldn't create a new token", w, http.StatusInternalServerError)
+		return
+	}
+
+	// Session successfully created
+	data, _ := json.Marshal(map[string]interface{}{
+		"token": sessionToken,
+	})
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}
