@@ -75,7 +75,11 @@ func startServer(w http.ResponseWriter, r *http.Request) {
 	preparationChan := manager.AddPreparingServer(serverID)
 
 	// Check if a prepared server with requested mc version exists
-	readyContainer, err := manager.GetPreparedMcServerContainerMcVersion(mcVersion)
+	readyContainer, err := manager.GetMcServerContainer(models.McContainerSearchConfig{
+		McVersion: mcVersion,
+		RamSizeMB: targetRamSize,
+		Status:    enums.Prepared,
+	})
 	if err != nil {
 		sendError("Couldn't fetch available server", w, http.StatusInternalServerError)
 		return
