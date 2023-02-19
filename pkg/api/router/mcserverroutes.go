@@ -28,7 +28,8 @@ func getPreparedServer(w http.ResponseWriter, r *http.Request) {
 
 	for nr, curContainer := range container {
 		mcVersion := utils.GetMcVersionFromContainer(curContainer)
-		result = append(result, models.PreparedContainer{Number: nr, McVersion: mcVersion})
+		ramSize, _ := manager.GetContainerRamSizeEnv(curContainer.ID)
+		result = append(result, models.PreparedContainer{Number: nr, McVersion: mcVersion, RamSizeMB: ramSize})
 	}
 
 	data, _ := json.Marshal(map[string]interface{}{
