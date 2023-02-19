@@ -67,6 +67,46 @@ func InitMCServerManagement() {
 		log.Info().Msg("A mc server is already prepared. Good!")
 	}
 
+	// Now we need to check for saved servers in the db
+	savedServer, err := db.GetSavedMcServer()
+	if err != nil {
+		log.Fatal().Err(err).Msg("Couldn't fetch saved mc servers in db")
+	}
+	alreadyRunningServer, err := GetRunningMcServer()
+	if err != nil {
+		log.Fatal().Err(err).Msg("Couldn't fetch already running server")
+	}
+
+	for _, server := range savedServer {
+		// check if the current server is already running
+		targetServerID := server.ServerID
+		exists := false
+		for _, runningServer := range alreadyRunningServer {
+			if runningServer.ServerID == targetServerID {
+				exists = true
+				break
+			}
+		}
+		if exists {
+			log.Info().Msgf("☑ Mc server %s is already running", targetServerID)
+		} else {
+			log.Info().Msgf("☐ Mc server %s is starting...", targetServerID)
+			var coreBootUpWaitGroup sync.WaitGroup
+			coreBootUpWaitGroup.Add(1)
+			PrepareMcServer(server.McVersion, models.McServerPreparationConfig{
+				Port:         server.Port,
+				RamSizeMB:    server.RamSizeMB,
+				CoreBootUpWG: &coreBootUpWaitGroup,
+				ServerID:     server.ServerID,
+				AutoDeploy:   true,
+			})
+			go func() {
+				coreBootUpWaitGroup.Wait()
+				log.Info().Msgf("☑ Mc server %s is started successfully", targetServerID)
+			}()
+		}
+	}
+
 }
 
 // PrepareMcServer Creates a mc server container, setup the mc world and pause the container for later deployment
