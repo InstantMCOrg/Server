@@ -17,6 +17,7 @@ func Register() *mux.Router {
 	r.HandleFunc("/login", loginRoute).Methods("POST")
 	r.HandleFunc("/user/password/change", passwordChange).Methods("POST")
 
+	r.HandleFunc("/server", getServer).Methods("GET")
 	r.HandleFunc("/server/prepared", getPreparedServer).Methods("GET")
 	r.HandleFunc("/server/start", startServer).Methods("POST")
 	r.HandleFunc("/server/start/status/{serverid}", serverStartStatus).Methods("GET")

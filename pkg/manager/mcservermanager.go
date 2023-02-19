@@ -354,6 +354,27 @@ func GetRunningMcServer() ([]models.McServerContainer, error) {
 	return result, nil
 }
 
+func GetMcServerContainerByServerID(serverID string, worldName string) (models.McServerContainer, error) {
+	container, err := GetMcServerContainer(models.McContainerSearchConfig{
+		Status: enums.Running,
+	})
+	if err != nil {
+		return models.McServerContainer{}, err
+	}
+	for _, curContainer := range container {
+		containerServerID := GetServerIDFromContainer(curContainer)
+		if containerServerID == serverID {
+
+			mcVersion := utils.GetMcVersionFromContainer(curContainer)
+			port := utils.GetPortFromContainer(curContainer)
+			ram, _ := GetContainerRamSizeEnv(curContainer.ID)
+			return models.McServerContainer{ContainerID: curContainer.ID, Name: worldName, ServerID: serverID, Port: port, McVersion: mcVersion, Status: enums.Running, RamSizeMB: ram}, nil
+		}
+	}
+
+	return models.McServerContainer{}, errors.New("server not found")
+}
+
 func generateId(serverName string) string {
 	return utils.MD5(serverName + utils.RandomString(32))
 }

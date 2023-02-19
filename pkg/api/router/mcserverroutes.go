@@ -40,6 +40,25 @@ func getPreparedServer(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
+func getServer(w http.ResponseWriter, r *http.Request) {
+	server, err := manager.GetRunningMcServer()
+	if err != nil {
+		sendError("Couldn't fetch running mc server", w, http.StatusInternalServerError)
+		return
+	}
+
+	serverData := []interface{}{}
+	for _, curServer := range server {
+		serverData = append(serverData, curServer.ToClientJson())
+	}
+
+	data, _ := json.Marshal(map[string]interface{}{
+		"server": serverData,
+	})
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}
+
 func deleteServer(w http.ResponseWriter, r *http.Request) {
 	serverID := mux.Vars(r)["serverid"]
 	// we need to check if the server exists
