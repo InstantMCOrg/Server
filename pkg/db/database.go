@@ -1,10 +1,12 @@
 package db
 
 import (
+	"github.com/instantminecraft/server/pkg/config"
 	"github.com/instantminecraft/server/pkg/models"
 	"github.com/instantminecraft/server/pkg/utils"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"path/filepath"
 )
 
 var db *gorm.DB
@@ -12,7 +14,8 @@ var db *gorm.DB
 const sessionTokenLength = 32
 
 func Init() {
-	dbConnection, err := gorm.Open(sqlite.Open("data.db"), &gorm.Config{
+	dbPath := filepath.Join(config.DataDir, "data.db")
+	dbConnection, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
 		//Logger: logger.Default.LogMode(logger.Silent), // silent logger
 	})
 	db = dbConnection

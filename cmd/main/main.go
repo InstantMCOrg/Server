@@ -14,6 +14,8 @@ func main() {
 	// Setup logger
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC822})
 
+	// Ensures all needed directories exist
+	manager.EnsureDirsExist()
 	// Setup Database
 	db.Init()
 	manager.InitDockerSystem()
