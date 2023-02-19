@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/instantminecraft/server/pkg/api/mcserverapi"
 	"github.com/instantminecraft/server/pkg/config"
+	"github.com/instantminecraft/server/pkg/db"
 	"github.com/instantminecraft/server/pkg/enums"
 	"github.com/instantminecraft/server/pkg/manager"
 	"github.com/instantminecraft/server/pkg/models"
@@ -83,6 +84,11 @@ func startServer(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		sendError("Couldn't fetch available server", w, http.StatusInternalServerError)
+		return
+	}
+	user, err := getCurrentUser(r)
+	if err != nil {
+		sendError("Couldn't fetch current user", w, http.StatusInternalServerError)
 		return
 	}
 

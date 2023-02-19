@@ -6,6 +6,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/instantminecraft/server/pkg/api/mcserverapi"
 	"github.com/instantminecraft/server/pkg/config"
+	"github.com/instantminecraft/server/pkg/db"
 	"github.com/instantminecraft/server/pkg/enums"
 	"github.com/instantminecraft/server/pkg/models"
 	"github.com/instantminecraft/server/pkg/utils"
@@ -70,6 +71,7 @@ func InitMCServerManagement() {
 
 // PrepareMcServer Creates a mc server container, setup the mc world and pause the container for later deployment
 // World mount path has the following system: `<current dir>/worlds/<port of container>`
+// If models.McServerPreparationConfig CoreBootUpWG is not nil, you need to call .Add(1) before calling PrepareMcServer
 func PrepareMcServer(mcVersion string, preparationConfig models.McServerPreparationConfig) {
 	mcServerPreparationWG.Add(1)
 	wg, ok := mcServerVersionPreparationWG[mcVersion]
@@ -105,9 +107,14 @@ func prepareMcServerSync(mcVersion string, preparationConfig models.McServerPrep
 	env = append(env, fmt.Sprintf("ram=%d", targetRamSize))
 
 	containerName := config.WaitingReadyContainerName
-	preparedContainer, err := GetPreparedMcServerContainer()
-	if err == nil && len(preparedContainer) > 0 {
-		containerName = config.WaitingReadyContainerNr(len(preparedContainer))
+	if preparationConfig.ServerID != "" {
+		containerName = generateContainerName(preparationConfig.ServerID)
+	} else {
+		// normal container preparation
+		preparedContainer, err := GetPreparedMcServerContainer()
+		if err == nil && len(preparedContainer) > 0 {
+			containerName = config.WaitingReadyContainerNr(len(preparedContainer))
+		}
 	}
 
 	currentPath, _ := os.Getwd()
@@ -134,14 +141,26 @@ func prepareMcServerSync(mcVersion string, preparationConfig models.McServerPrep
 
 	// Now we need to pause the container because the mc world needs to stop
 	SaveAuthKey(containerID, authKey)
-	PauseContainer(containerID)
-	log.Info().Msgf("A mc %s server container has been prepared", mcVersion)
+	if !preparationConfig.AutoDeploy {
+		PauseContainer(containerID)
+		log.Info().Msgf("A mc %s server container has been prepared", mcVersion)
+	}
+
 	mcServerPreparationWG.Done()
 	mcServerVersionPreparationWG[mcVersion].Done()
 }
 
 func IsContainerPreparationServer(container types.Container) bool {
 	return len(container.Names) > 0 && strings.HasPrefix(container.Names[0], "/"+config.WaitingReadyContainerName)
+}
+
+// GetServerIDFromContainer Returns the serverID or an empty string ("") if the container is not an mc server
+func GetServerIDFromContainer(container types.Container) string {
+	baseName := "/" + config.ContainerBaseName
+	if len(container.Names) > 0 && strings.HasPrefix(container.Names[0], baseName) {
+		return strings.ReplaceAll(container.Names[0], baseName, "")
+	}
+	return ""
 }
 
 func GetMcServerContainer(searchConfig models.McContainerSearchConfig) ([]types.Container, error) {
@@ -153,7 +172,7 @@ func GetMcServerContainer(searchConfig models.McContainerSearchConfig) ([]types.
 	if searchForPreparedContainer {
 		container, err = ListContainersByNameStart(config.WaitingReadyContainerName)
 	} else {
-		container, err = ListContainer()
+		container, err = ListContainersByNameStart(config.ContainerBaseName)
 	}
 	if err != nil {
 		return nil, err
@@ -251,13 +270,29 @@ func WaitForTargetServerPrepared(mcVersion string) {
 }
 
 func GetRunningMcServer() ([]models.McServerContainer, error) {
-	_, err := ListContainer()
-
+	mcServer, err := GetMcServerContainer(models.McContainerSearchConfig{
+		Status: enums.Running,
+	})
 	if err != nil {
 		return nil, err
 	}
+	var result []models.McServerContainer
 
-	return nil, nil
+	for _, container := range mcServer {
+		serverID := GetServerIDFromContainer(container)
+		if serverID == "" {
+			// not a valid mc server container
+			continue
+		}
+		serverData, err := db.GetMcServerData(serverID)
+		if err != nil {
+			// server is not in db
+			continue
+		}
+		result = append(result, *serverData.Self())
+	}
+
+	return result, nil
 }
 
 func generateId(serverName string) string {
@@ -329,5 +364,5 @@ func StartMcServer(containerID string, name string) (models.McServerContainer, e
 	mcVersion := utils.GetMcVersionFromContainer(targetContainer)
 	port := utils.GetPortFromContainer(targetContainer)
 	ram, _ := GetContainerRamSizeEnv(containerID)
-	return models.McServerContainer{ContainerID: containerID, Name: name, ID: id, Port: port, McVersion: mcVersion, Status: enums.Running, RamSizeMB: ram}, err
+	return models.McServerContainer{ContainerID: containerID, Name: name, ServerID: id, Port: port, McVersion: mcVersion, Status: enums.Running, RamSizeMB: ram}, err
 }
