@@ -3,6 +3,7 @@ package manager
 import (
 	"bufio"
 	"github.com/docker/docker/api/types/mount"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -84,8 +85,9 @@ func ListContainersByNameStart(namePrefix string) ([]types.Container, error) {
 // RunContainer Attempts to run a container with given arguments
 // Returns container ID as a string and nil if successful
 // Otherwise an empty string and an error
-func RunContainer(imageName string, containerName string, containerPort int, env []string, worldMountPath string) (string, error) {
+func RunContainer(imageName string, containerName string, containerPort int, env []string, worldMountPath string, ramSizeMB int) (string, error) {
 	port := strconv.Itoa(config.McServerProxyPort) + "/tcp"
+	ramSizeInBytes := int64(float64(ramSizeMB) * math.Pow(10, 6))
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image: imageName,
 		ExposedPorts: nat.PortSet{
@@ -102,6 +104,9 @@ func RunContainer(imageName string, containerName string, containerPort int, env
 				Source: worldMountPath,
 				Target: "/server/world",
 			},
+		},
+		Resources: container.Resources{
+			Memory: ramSizeInBytes,
 		},
 	}, nil, nil, containerName)
 
@@ -149,6 +154,20 @@ func ObtainAuthKeys(container []types.Container) map[string]string {
 
 func GetContainerStats(containerID string) (types.ContainerJSON, error) {
 	return cli.ContainerInspect(ctx, containerID)
+}
+
+func GetContainerRamSizeEnv(containerID string) (int, error) {
+	stats, err := GetContainerStats(containerID)
+	if err != nil {
+		return 0, err
+	}
+	for _, curEnv := range stats.Config.Env {
+		if strings.HasPrefix(curEnv, ramEnvKey) {
+			ramRaw := strings.Split(curEnv, "=")[1]
+			return strconv.Atoi(ramRaw)
+		}
+	}
+	return config.DefaultRamSize, nil
 }
 
 func IsContainerPaused(containerID string) (bool, error) {

@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
 	"net/http"
+	"strconv"
 	"sync"
 )
 
@@ -48,6 +49,19 @@ func startServer(w http.ResponseWriter, r *http.Request) {
 		sendError("Please provide the field \"mc_version\"", w, http.StatusBadRequest)
 		return
 	}
+	targetRamSizeRaw := r.FormValue("ram") // Optional
+	var targetRamSize int = config.DefaultRamSize
+	if targetRamSizeRaw != "" {
+		var err error
+		targetRamSize, err = strconv.Atoi(targetRamSizeRaw)
+		if err != nil {
+			sendError("Couldn't parse field \"ram\"", w, http.StatusBadRequest)
+			return
+		} else if targetRamSize > config.MaximumRamPerInstance {
+			sendError(fmt.Sprintf("Requested ram exceeds maximum allowed ram size (%dmb)", config.MaximumRamPerInstance), w, http.StatusBadRequest)
+			return
+		}
+	}
 
 	// check if requested mc version is valid
 	if !slices.Contains(config.AvailableVersions, mcVersion) {
@@ -80,10 +94,11 @@ func startServer(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		data, _ := json.Marshal(map[string]interface{}{
-			"status":     enums.Preparing.String(),
-			"id":         serverID,
-			"name":       name,
-			"mc_version": mcVersion,
+			"status":      enums.Preparing.String(),
+			"id":          serverID,
+			"name":        name,
+			"ram_size_mb": targetRamSize,
+			"mc_version":  mcVersion,
 		})
 		w.WriteHeader(http.StatusOK)
 		w.Write(data)
@@ -103,7 +118,12 @@ func startServer(w http.ResponseWriter, r *http.Request) {
 
 			coreBootUpWaitGroup := sync.WaitGroup{}
 			coreBootUpWaitGroup.Add(1)
-			manager.PrepareMcServer(mcVersion, models.McServerPreparationConfig{Port: port, AuthKey: authKey, CoreBootUpWG: &coreBootUpWaitGroup})
+			manager.PrepareMcServer(mcVersion, models.McServerPreparationConfig{
+				Port:         port,
+				AuthKey:      authKey,
+				CoreBootUpWG: &coreBootUpWaitGroup,
+				RamSizeMB:    targetRamSize,
+			})
 			coreBootUpWaitGroup.Wait()
 			worldGenerationChan, err := mcserverapi.GetWorldGenerationChan(port, authKey)
 			if err != nil {

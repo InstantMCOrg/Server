@@ -27,6 +27,7 @@ var mcServerVersionPreparationWG = map[string]*sync.WaitGroup{}
 var preparingMcContainer = map[string]chan string{}
 
 const authEnvKey = "auth"
+const ramEnvKey = "ram"
 
 // InitMCServerManagement Setup docker connection and retrieve already running minecraft server container instances
 func InitMCServerManagement() {
@@ -97,6 +98,11 @@ func prepareMcServerSync(mcVersion string, preparationConfig models.McServerPrep
 	}
 
 	env := []string{"autostart=false", fmt.Sprintf("%s=%s", authEnvKey, authKey)}
+	var targetRamSize = config.DefaultRamSize
+	if preparationConfig.RamSizeMB != 0 {
+		targetRamSize = preparationConfig.RamSizeMB
+	}
+	env = append(env, fmt.Sprintf("ram=%d", targetRamSize))
 
 	containerName := config.WaitingReadyContainerName
 	preparedContainer, err := GetPreparedMcServerContainer()
@@ -107,7 +113,7 @@ func prepareMcServerSync(mcVersion string, preparationConfig models.McServerPrep
 	currentPath, _ := os.Getwd()
 	targetWorldMountPath := filepath.Join(currentPath, "worlds", fmt.Sprintf("%d", port))
 
-	containerID, err := RunContainer(config.ImageWithMcVersion(mcVersion), containerName, port, env, targetWorldMountPath)
+	containerID, err := RunContainer(config.ImageWithMcVersion(mcVersion), containerName, port, env, targetWorldMountPath, targetRamSize)
 	if err != nil {
 		log.Error().Err(err).Msg("Couldn't start preparation docker container. Retrying in 2 seconds...")
 		time.Sleep(2 * time.Second)
