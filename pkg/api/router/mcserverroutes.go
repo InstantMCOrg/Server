@@ -139,6 +139,8 @@ func startServer(w http.ResponseWriter, r *http.Request) {
 				AuthKey:      authKey,
 				CoreBootUpWG: &coreBootUpWaitGroup,
 				RamSizeMB:    targetRamSize,
+				ServerID:     serverID,
+				AutoDeploy:   true,
 			})
 			coreBootUpWaitGroup.Wait()
 			worldGenerationChan, err := mcserverapi.GetWorldGenerationChan(port, authKey)
