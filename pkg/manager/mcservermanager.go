@@ -84,6 +84,10 @@ func InitMCServerManagement() {
 		for _, runningServer := range alreadyRunningServer {
 			if runningServer.ServerID == targetServerID {
 				exists = true
+				// we need to update the db for that server, specifically the containerID
+				if err := db.UpdateServerContainerID(&server, runningServer.ContainerID); err != nil {
+					log.Error().Err(err).Msgf("Couldn't update db entry for containerID for server %s", targetServerID)
+				}
 				break
 			}
 		}
