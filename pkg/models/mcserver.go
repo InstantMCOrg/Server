@@ -47,3 +47,11 @@ type McServerPreparationConfig struct {
 	RamSizeMB    int
 	CoreBootUpWG *sync.WaitGroup
 }
+
+// McContainerSearchConfig
+// Default Status is Prepared
+type McContainerSearchConfig struct {
+	McVersion string
+	Status    enums.ServerStatus
+	RamSizeMB int
+}

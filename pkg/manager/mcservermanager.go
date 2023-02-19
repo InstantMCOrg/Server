@@ -138,7 +138,47 @@ func IsContainerPreparationServer(container types.Container) bool {
 	return len(container.Names) > 0 && strings.HasPrefix(container.Names[0], "/"+config.WaitingReadyContainerName)
 }
 
+func GetMcServerContainer(searchConfig models.McContainerSearchConfig) ([]types.Container, error) {
+	var targetContainer []types.Container
+
+	searchForPreparedContainer := searchConfig.Status == enums.Prepared
+	var container []types.Container
+	var err error
+	if searchForPreparedContainer {
+		container, err = ListContainersByNameStart(config.WaitingReadyContainerName)
+	} else {
+		container, err = ListContainer()
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// now we need to filter
+	for _, curContainer := range container {
+		if searchConfig.McVersion != "" {
+			// we need to match the mc version
+			mcVersion := utils.GetMcVersionFromContainer(curContainer)
+			if mcVersion != searchConfig.McVersion {
+				// Mc version doesn't match
+				continue
+			}
+		}
+		if searchConfig.RamSizeMB != 0 {
+			// we need to match the target ram size
+			ramSize, err := GetContainerRamSizeEnv(curContainer.ID)
+			if err != nil || ramSize != searchConfig.RamSizeMB {
+				continue
+			}
+		}
+
+		targetContainer = append(targetContainer, curContainer)
+	}
+
+	return targetContainer, nil
+}
+
 // GetPreparedMcServerContainer Returns a list of Container which minecraft world is setup and the container state is paused
+// Deprecated: Use GetMcServerContainer with config instead
 func GetPreparedMcServerContainer() ([]types.Container, error) {
 	var readyContainer []types.Container
 	container, err := ListContainersByNameStart(config.WaitingReadyContainerName)
@@ -158,6 +198,7 @@ func GetPreparedMcServerContainer() ([]types.Container, error) {
 }
 
 // GetPreparedMcServerContainerMcVersion Returns a list of prepared container with a specific mc version
+// Deprecated: Use GetMcServerContainer with config instead
 func GetPreparedMcServerContainerMcVersion(targetMcVersion string) ([]types.Container, error) {
 	readyContainer, err := GetPreparedMcServerContainer()
 	if err != nil {
