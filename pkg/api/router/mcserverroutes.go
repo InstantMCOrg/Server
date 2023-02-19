@@ -40,6 +40,55 @@ func getPreparedServer(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
+func deleteServer(w http.ResponseWriter, r *http.Request) {
+	serverID := mux.Vars(r)["serverid"]
+	// we need to check if the server exists
+	mcServerData, err := db.GetMcServerData(serverID)
+	if err != nil {
+		sendError("Server with given ID doesn't exist", w, http.StatusNotFound)
+		return
+	}
+	// stop container if it's running
+	runningMcServer, err := manager.GetRunningMcServer()
+	if err != nil {
+		sendError("Couldn't get running server", w, http.StatusInternalServerError)
+		return
+	}
+
+	for _, container := range runningMcServer {
+		if container.ServerID == mcServerData.ServerID {
+			// kill the container
+			err := manager.KillContainer(container.ContainerID)
+			if err != nil {
+				sendError("Couldn't stop server", w, http.StatusInternalServerError)
+				log.Error().Err(err).Msgf("Couldn't stop container %s (Server %s)", container.ContainerID, container.ServerID)
+				return
+			}
+			break
+		}
+	}
+
+	// now we need to delete the mc world volume
+	if err := manager.DeleteMcWorld(mcServerData.Port); err != nil {
+		sendError("Couldn't delete mc world", w, http.StatusInternalServerError)
+		log.Error().Err(err).Msgf("Couldn't delete mc world with port %d", mcServerData.Port)
+		return
+	}
+
+	// we need to make the port available again
+	manager.RemovePortFromUsageList(mcServerData.Port)
+
+	// finally we delete the db entry
+	if err := db.DeleteServer(&mcServerData); err != nil {
+		sendError("Couldn't delete server from db", w, http.StatusInternalServerError)
+		return
+	}
+
+	data, _ := json.Marshal(map[string]interface{}{})
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}
+
 func startServer(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	if name == "" {
