@@ -104,3 +104,15 @@ func GetMcServerData(serverID string) (models.DBMcServerContainer, error) {
 	err := db.First(&result, "server_id = ?", serverID).Error
 	return result, err
 }
+
+func DeleteServer(mcServerContainerModel *models.DBMcServerContainer) error {
+	return db.Delete(&mcServerContainerModel).Error
+}
+func DeleteServerByID(serverID string) error {
+	return db.Where("server_id = ?", serverID).Delete(&models.DBMcServerContainer{}).Error
+}
+
+func UpdateServerContainerID(mcServerContainerModel *models.DBMcServerContainer, newContainerID string) error {
+	mcServerContainerModel.ContainerID = newContainerID
+	return db.Save(&mcServerContainerModel).Error
+}
