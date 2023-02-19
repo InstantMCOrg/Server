@@ -102,7 +102,7 @@ func InitMCServerManagement() {
 			})
 			go func() {
 				coreBootUpWaitGroup.Wait()
-				log.Info().Msgf("☑ Mc server %s has started successfully", targetServerID)
+				log.Info().Msgf("☑ Mc server %s started successfully", targetServerID)
 			}()
 		}
 	}
@@ -227,6 +227,11 @@ func GetMcServerContainer(searchConfig models.McContainerSearchConfig) ([]types.
 				// throw it away
 				continue
 			}
+		} else {
+			// Prepared unused container must go out
+			if IsContainerPreparationServer(curContainer) {
+				continue
+			}
 		}
 		if searchConfig.McVersion != "" {
 			// we need to match the mc version
@@ -337,6 +342,8 @@ func GetRunningMcServer() ([]models.McServerContainer, error) {
 			// server is not in db
 			continue
 		}
+		// currently the containerID in serverData got replaced by the dbs value. We need to fix that
+		serverData.ContainerID = container.ID
 		result = append(result, *serverData.Self())
 	}
 

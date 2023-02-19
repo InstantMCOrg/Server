@@ -57,6 +57,7 @@ type McServerPreparationConfig struct {
 
 // McContainerSearchConfig
 // Default Status is Prepared
+// IF Status is enums.Running ready prepared container are NOT returned
 type McContainerSearchConfig struct {
 	McVersion string
 	Status    enums.ServerStatus

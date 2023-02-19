@@ -179,7 +179,7 @@ func IsContainerPaused(containerID string) (bool, error) {
 }
 
 func KillContainer(containerID string) error {
-	return cli.ContainerRemove(ctx, containerID, types.ContainerRemoveOptions{Force: true})
+	return cli.ContainerRemove(ctx, containerID, types.ContainerRemoveOptions{Force: true, RemoveVolumes: true})
 }
 
 func Close() {
