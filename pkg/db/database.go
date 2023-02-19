@@ -65,6 +65,7 @@ func CreateSession(userModel *models.User) (string, error) {
 
 func GetSession(token string) (models.Session, error) {
 	var session models.Session
+	token = utils.SHA256([]byte(token))
 	err := db.First(&session, "token = ?", token).Error
 	return session, err
 }
