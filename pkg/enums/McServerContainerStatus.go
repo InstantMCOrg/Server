@@ -3,7 +3,8 @@ package enums
 type ServerStatus int
 
 const (
-	Stopped ServerStatus = iota
+	Prepared ServerStatus = iota
+	Stopped
 	Preparing
 	Running
 )
@@ -14,6 +15,8 @@ func (s ServerStatus) String() string {
 		return "Stopped"
 	case Preparing:
 		return "Preparing"
+	case Prepared:
+		return "Prepared"
 	case Running:
 		return "Running"
 	}
