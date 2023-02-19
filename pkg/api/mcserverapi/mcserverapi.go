@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 const authHeader = "auth"
@@ -83,4 +84,23 @@ func GetWorldGenerationChan(port int, authKey string) (chan int, error) {
 	}()
 
 	return worldGenerationChan, nil
+}
+
+func SendMessage(port int, authKey string, message string) error {
+	client := &http.Client{}
+	targetUrl := fmt.Sprintf("http://localhost:%d/server/message/send", port)
+
+	form := url.Values{}
+	form.Add("message", message)
+
+	req, _ := http.NewRequest("POST", targetUrl, strings.NewReader(form.Encode()))
+	req.Header.Set(authHeader, authKey)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	_, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
+	return nil
 }

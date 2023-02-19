@@ -163,6 +163,8 @@ func startServer(w http.ResponseWriter, r *http.Request) {
 	if len(readyContainer) > 0 {
 		// no need for preparation, we can start a mc server instance instantly
 		mcServer, err := manager.StartMcServer(readyContainer[0].ID, name)
+		authKey := manager.GetAuthKeyForMcServer(readyContainer[0].ID)
+		mcserverapi.SendMessage(mcServer.Port, authKey, "Server wake up successful")
 		if err != nil {
 			sendError("Couldn't start mc server", w, http.StatusInternalServerError)
 			return
