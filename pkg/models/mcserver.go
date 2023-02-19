@@ -44,12 +44,15 @@ type ServerStatus struct {
 }
 
 // McServerPreparationConfig
-// ´CoreBootUpWG´ waits until the http server started
+// CoreBootUpWG waits until the http server started
+// If AutoDeploy is set to false the container will pause and wait until it is picked up
 type McServerPreparationConfig struct {
 	Port         int
 	AuthKey      string
 	RamSizeMB    int
 	CoreBootUpWG *sync.WaitGroup
+	ServerID     string
+	AutoDeploy   bool
 }
 
 // McContainerSearchConfig
