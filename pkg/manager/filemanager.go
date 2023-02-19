@@ -5,6 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 // EnsureDirsExist Checks if all needed directories exist. If not they will be created
@@ -18,5 +19,7 @@ func EnsureDirsExist() {
 }
 
 func DeleteMcWorld(port int) error {
-	return os.RemoveAll(filepath.Join(config.DataDir, string(port)))
+	path := filepath.Join(config.DataDir, config.McWorldsDir, strconv.Itoa(port))
+	log.Info().Msgf("Deleting mc world %s...", path)
+	return os.RemoveAll(path)
 }

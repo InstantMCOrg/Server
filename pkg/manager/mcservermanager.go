@@ -162,7 +162,7 @@ func prepareMcServerSync(mcVersion string, preparationConfig models.McServerPrep
 	}
 
 	currentPath, _ := os.Getwd()
-	targetWorldMountPath := filepath.Join(currentPath, config.DataDir, "worlds", fmt.Sprintf("%d", port))
+	targetWorldMountPath := filepath.Join(currentPath, config.DataDir, config.McWorldsDir, fmt.Sprintf("%d", port))
 
 	containerID, err := RunContainer(config.ImageWithMcVersion(mcVersion), containerName, port, env, targetWorldMountPath, targetRamSize)
 	if err != nil {
