@@ -102,7 +102,7 @@ func InitMCServerManagement() {
 			})
 			go func() {
 				coreBootUpWaitGroup.Wait()
-				log.Info().Msgf("☑ Mc server %s is started successfully", targetServerID)
+				log.Info().Msgf("☑ Mc server %s has started successfully", targetServerID)
 			}()
 		}
 	}
@@ -220,6 +220,14 @@ func GetMcServerContainer(searchConfig models.McContainerSearchConfig) ([]types.
 
 	// now we need to filter
 	for _, curContainer := range container {
+		if searchForPreparedContainer {
+			// we have to check if the container is paused. If not the container is not ready prepared
+			isPaused, err := IsContainerPaused(curContainer.ID)
+			if err != nil || !isPaused {
+				// throw it away
+				continue
+			}
+		}
 		if searchConfig.McVersion != "" {
 			// we need to match the mc version
 			mcVersion := utils.GetMcVersionFromContainer(curContainer)
