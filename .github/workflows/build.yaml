@@ -8,6 +8,7 @@ on:
 
 jobs:
   build-app-and-append-to-release:
+    name: Build app and append files to release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -32,17 +33,11 @@ jobs:
       - name: Build app for arm64 arch
         run: env GOOS=linux GOARCH=arm64 go build -o build/instantminecraftserver_aarch64 cmd/main/main.go
 
-      - name: Gets latest created release info
-        id: latest_release_info
-        uses: jossef/action-latest-release-info@v1.1.0
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-
-      - name: Upload Release Assets
-        id: upload-release-assets
-        uses: dwenegar/upload-release-assets@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          release_id: ${{ steps.latest_release_info.outputs.id }}
-          assets_path: build
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: build
+          tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true
