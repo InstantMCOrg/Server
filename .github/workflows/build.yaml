@@ -1,0 +1,48 @@
+name: Build app executables
+on:
+  release:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-app-and-append-to-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Test
+        run: go test -v ./...
+
+      - name: Create working directory
+        run: mkdir build
+
+      - name: Build app for x86_64 arch
+        run: env GOOS=linux GOARCH=amd64 go build -o build/instantminecraftserver_x86_64 cmd/main/main.go
+
+      - name: Build app for arm64 arch
+        run: env GOOS=linux GOARCH=arm64 go build -o build/instantminecraftserver_aarch64 cmd/main/main.go
+
+      - name: Gets latest created release info
+        id: latest_release_info
+        uses: jossef/action-latest-release-info@v1.1.0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Upload Release Assets
+        id: upload-release-assets
+        uses: dwenegar/upload-release-assets@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.latest_release_info.outputs.id }}
+          assets_path: build
