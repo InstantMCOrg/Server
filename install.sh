@@ -14,6 +14,10 @@ esac
 
 realuser="${SUDO_USER:-${USER}}"
 arch=$(uname -m)
+
+echo "Removing old installations..."
+rm -rf /opt/instantminecraft
+
 echo "Searching executable for architecture $arch..."
 
 releasesJson=$(curl -s https://api.github.com/repos/InstantMinecraft/Server/releases/latest)
