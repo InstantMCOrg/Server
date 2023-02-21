@@ -35,6 +35,10 @@ jobs:
       - name: Build app for arm64 arch
         run: env CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -o build/instantminecraftserver_aarch64 cmd/main/main.go
 
+      - name: (Debug) list build files
+        run: |
+          ls build
+
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
