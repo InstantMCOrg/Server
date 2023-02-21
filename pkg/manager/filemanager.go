@@ -21,6 +21,12 @@ func EnsureDirsExist() {
 	}
 }
 
+func CreateMcWorld(port int) error {
+	path := filepath.Join(config.DataDir, config.McWorldsDir, strconv.Itoa(port))
+	log.Info().Msgf("Creating mc world %s...", path)
+	return os.MkdirAll(path, os.ModePerm)
+}
+
 func DeleteMcWorld(port int) error {
 	path := filepath.Join(config.DataDir, config.McWorldsDir, strconv.Itoa(port))
 	log.Info().Msgf("Deleting mc world %s...", path)

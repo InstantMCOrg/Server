@@ -88,6 +88,12 @@ func ListContainersByNameStart(namePrefix string) ([]types.Container, error) {
 func RunContainer(imageName string, containerName string, containerPort int, env []string, worldMountPath string, ramSizeMB int) (string, error) {
 	port := strconv.Itoa(config.McServerProxyPort) + "/tcp"
 	ramSizeInBytes := int64(float64(ramSizeMB) * math.Pow(10, 6))
+
+	// we need to create the mount directory first
+	err := CreateMcWorld(containerPort)
+	if err != nil {
+		return "", err
+	}
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image: imageName,
 		ExposedPorts: nat.PortSet{
