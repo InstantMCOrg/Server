@@ -2,6 +2,7 @@ name: Build app executables
 on:
   release:
     branches: [ "main" ]
+    types: [published]
   workflow_dispatch:
 
 jobs:
