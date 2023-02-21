@@ -15,6 +15,9 @@ func EnsureDirsExist() {
 		if err := os.Mkdir(config.DataDir, os.ModePerm); err != nil {
 			log.Fatal().Err(err).Msgf("Couldn't create the directory %s", config.DataDir)
 		}
+		if err := os.MkdirAll(filepath.Join(config.DataDir, config.McWorldsDir), os.ModePerm); err != nil {
+			log.Fatal().Err(err).Msgf("Couldn't create the directory %s", filepath.Join(config.DataDir, config.McWorldsDir))
+		}
 	}
 }
 
