@@ -11,7 +11,7 @@
 - CPU architecture must be either x86_64 or arm64
 - Docker is installed and active
 - Your system is using systemd
-- You opened the ports 80 and 25000-25090
+- You opened the ports 25000-25090 (the http server listens on port 25000)
 ### Install and run the software using the ``install.sh`` script:
 ```bash
 $ wget https://raw.githubusercontent.com/InstantMinecraft/Server/main/install.sh -O install.sh
