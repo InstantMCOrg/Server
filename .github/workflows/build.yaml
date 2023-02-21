@@ -28,6 +28,9 @@ jobs:
       - name: Build app for x86_64 arch
         run: env CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o build/instantminecraftserver_x86_64 cmd/main/main.go
 
+      - name: Install dependencies for arm64 build
+        run : |
+          apt-get install gcc-aarch64-linux-gnu
       - name: Build app for arm64 arch
         run: env CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -o build/instantminecraftserver_aarch64 cmd/main/main.go
 
