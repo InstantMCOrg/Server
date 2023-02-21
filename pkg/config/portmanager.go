@@ -2,5 +2,5 @@ package config
 
 const (
 	PortRangeBegin = 25000
-	PortRangeEnd   = 25900
+	PortRangeEnd   = 25090
 )
