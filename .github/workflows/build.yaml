@@ -31,7 +31,7 @@ jobs:
 
       - name: Install dependencies for arm64 build
         run : |
-          apt-get install gcc-aarch64-linux-gnu
+          sudo apt-get install gcc-aarch64-linux-gnu -y
       - name: Build app for arm64 arch
         run: env CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -o build/instantminecraftserver_aarch64 cmd/main/main.go
 
