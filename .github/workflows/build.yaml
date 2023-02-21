@@ -28,10 +28,10 @@ jobs:
         run: mkdir build
 
       - name: Build app for x86_64 arch
-        run: env GOOS=linux GOARCH=amd64 go build -o build/instantminecraftserver_x86_64 cmd/main/main.go
+        run: env CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o build/instantminecraftserver_x86_64 cmd/main/main.go
 
       - name: Build app for arm64 arch
-        run: env GOOS=linux GOARCH=arm64 go build -o build/instantminecraftserver_aarch64 cmd/main/main.go
+        run: env CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -o build/instantminecraftserver_aarch64 cmd/main/main.go
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
