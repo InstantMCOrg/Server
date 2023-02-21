@@ -14,7 +14,9 @@
 - You opened the ports 80 and 25000-25090
 ### Install and run the software using the ``install.sh`` script:
 ```bash
-$ curl -s -L https://raw.githubusercontent.com/InstantMinecraft/Server/main/install.sh | sudo bash
+$ wget https://raw.githubusercontent.com/InstantMinecraft/Server/main/install.sh -O install.sh
+$ chmod +x install.sh
+$ sudo ./install.sh
 ```
 
 ## Usage
