@@ -10,24 +10,24 @@
 Magic\
 (_jk, TODO_)
 
-## Installation
-### Prerequisites
+# Installation
+## Prerequisites
 - CPU architecture must be either x86_64 or arm64
 - Docker is installed and active
 - Your system is using systemd
 - You opened the ports 25000-25090 (the http server listens on port 25000)
-### Install and run the software using the ``install.sh`` script:
+## Install and run the software using the ``install.sh`` script:
 ```bash
 $ wget https://raw.githubusercontent.com/InstantMinecraft/Server/main/install.sh -O install.sh
 $ chmod +x install.sh
 $ sudo ./install.sh
 ```
 
-## Usage
-### Using the HTTP-API
+# Usage
+## Using the HTTP-API
 _The HTTP server is listening on port 25000_
 
-#### Note: First of all, you need to login and obtain your session
+### Note: First of all, you need to login and obtain your session
 First-Time-Login after installation:
 
 `POST /login` \
@@ -58,7 +58,7 @@ This will be the response:
 ```
 _The old token won't work any more after you changed your password. Use the new one._
 
-#### After you completed the _First-Time-Login_-steps you can access the REST HTTP API:
+### After you completed the _First-Time-Login_-steps you can access the REST HTTP API:
 **Note: you need to send the following header in every request:** `auth: <YOUR-AUTH-TOKEN>`
 
 `GET /server` \
@@ -176,5 +176,5 @@ Message Examples:
 **More APIs to be added soon**
 
 
-### Using the dedicated Flutter App
+## Using the dedicated Flutter App
 _Coming soon_
