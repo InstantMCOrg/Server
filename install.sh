@@ -32,6 +32,7 @@ mkdir -p $path
 wget "$downloadUrl" -O "$path$filename"
 chmod +x "$path$filename"
 
+rm /etc/systemd/system/instantminecraft.service
 echo "Installing systemd service..."
 echo "
 [Unit]
@@ -43,7 +44,7 @@ User=$realuser
 WorkingDirectory=$path
 ExecStart=$path$filename
 Restart=on-failure
-RestartSec=10
+RestartSec=5
 [Install]
 WantedBy=multi-user.target
 " > /etc/systemd/system/instantminecraft.service
