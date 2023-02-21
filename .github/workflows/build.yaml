@@ -2,8 +2,6 @@ name: Build app executables
 on:
   release:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
