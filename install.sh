@@ -49,9 +49,12 @@ RestartSec=5
 WantedBy=multi-user.target
 " > /etc/systemd/system/instantminecraft.service
 
+chown -R $realuser:$realuser /opt/instantminecraft
+
 systemctl daemon-reload
 systemctl enable instantminecraft.service
 systemctl start instantminecraft.service
 systemctl status instantminecraft
+journalctl -u instantminecraft --no-pager
 
 echo "Done!"
