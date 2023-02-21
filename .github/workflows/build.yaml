@@ -31,7 +31,7 @@ jobs:
         run: env CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o build/instantminecraftserver_x86_64 cmd/main/main.go
 
       - name: Build app for arm64 arch
-        run: env CGO_ENABLED=1 CC=arm-linux-gnueabihf-gcc CXX=arm-linux-gnueabihf-g++ CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o build/instantminecraftserver_aarch64 cmd/main/main.go
+        run: env CGO_ENABLED=1 CC=arm-linux-gnueabihf-gcc CXX=arm-linux-gnueabihf-g++ GOOS=linux GOARCH=arm64 go build -o build/instantminecraftserver_aarch64 cmd/main/main.go
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
