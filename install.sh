@@ -15,8 +15,9 @@ esac
 realuser="${SUDO_USER:-${USER}}"
 arch=$(uname -m)
 
+filename="instantminecraft"
 echo "Removing old installations..."
-rm -rf /opt/instantminecraft
+rm /opt/instantminecraft/$filename
 
 echo "Searching executable for architecture $arch..."
 
@@ -31,7 +32,6 @@ cd $path && cd ..
 chown "$realuser" instantminecraft
 
 echo "Downloading $downloadUrl to $path..."
-filename="instantminecraft"
 mkdir -p $path
 wget "$downloadUrl" -O "$path$filename"
 chmod +x "$path$filename"
