@@ -7,8 +7,9 @@
 [![Default workflow](https://github.com/InstantMinecraft/Server/actions/workflows/test.yaml/badge.svg)](https://github.com/InstantMinecraft/Server/actions/workflows/workflow.yaml)
 
 # How does it work?
-Magic\
-(_jk, TODO_)
+Your Minecraft Server run in dedicated docker container with a [custom runtime and backend](https://github.com/InstantMC/Client).
+The InstantMC Server prepares them (world generation etc.) in the background and pauses the docker container. If you want to start a Minecraft server, this backend searches for available prepared Minecraft server with the target requirements. If a prepared unit has been found it will be resumed, and it will be up and running in under one second.
+If no prepared server fits the requirements a new one will be generated and activated as soon as the Minecraft world is ready.
 
 # Installation
 ## Prerequisites
@@ -26,6 +27,14 @@ $ sudo ./install.sh
 # Usage
 ## Using the HTTP-API
 _The HTTP server is listening on port 25000_
+
+`GET /` \
+Response:
+````json
+{
+  "server": "InstantMC"
+}
+````
 
 ### Note: First of all, you need to login and obtain your session
 First-Time-Login after installation:
