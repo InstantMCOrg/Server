@@ -1,7 +1,7 @@
 package manager
 
 import (
-	"github.com/instantminecraft/server/pkg/config"
+	"github.com/instantmc/server/pkg/config"
 	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"

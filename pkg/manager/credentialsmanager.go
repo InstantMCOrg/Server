@@ -1,6 +1,6 @@
 package manager
 
-import "github.com/instantminecraft/server/pkg/utils"
+import "github.com/instantmc/server/pkg/utils"
 
 var authKeyMap = map[string]string{}
 

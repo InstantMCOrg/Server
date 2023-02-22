@@ -21,7 +21,7 @@ func sendError(error string, w http.ResponseWriter, status int) {
 
 func rootRoute(w http.ResponseWriter, r *http.Request) {
 	data, _ := json.Marshal(map[string]interface{}{
-		"server": "InstantMinecraft",
+		"server": "InstantMC",
 	})
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)

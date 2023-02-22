@@ -5,7 +5,7 @@ if [ "$(id -u)" -ne 0 ]; then
         exit 1
 fi
 
-read -p "Do you want to install the InstantMinecraft Server (y/n)?" choice
+read -p "Do you want to install the InstantMC Server (y/n)?" choice
 case "$choice" in
   y|Y ) echo "Installing...";;
   n|N ) exit;;
@@ -15,32 +15,32 @@ esac
 realuser="${SUDO_USER:-${USER}}"
 arch=$(uname -m)
 
-filename="instantminecraft"
+filename="instantmc"
 echo "Removing old installations..."
-rm /opt/instantminecraft/$filename
+rm /opt/instantmc/$filename
 
 echo "Searching executable for architecture $arch..."
 
-releasesJson=$(curl -s https://api.github.com/repos/InstantMinecraft/Server/releases/latest)
+releasesJson=$(curl -s https://api.github.com/repos/InstantMC/Server/releases/latest)
 # Getting Tag name
 tagName=$(echo $releasesJson | grep -o -P '(?<="tag_name": ").*(?=", "target_commitish)')
 echo "Latest release is $tagName"
 
-downloadUrl="https://github.com/InstantMinecraft/Server/releases/download/$tagName/instantminecraftserver_$arch"
-path="/opt/instantminecraft/"
+downloadUrl="https://github.com/InstantMC/Server/releases/download/$tagName/instantminecraftserver_$arch"
+path="/opt/instantmc/"
 cd $path && cd ..
-chown "$realuser" instantminecraft
+chown "$realuser" instantmc
 
 echo "Downloading $downloadUrl to $path..."
 mkdir -p $path
 wget "$downloadUrl" -O "$path$filename"
 chmod +x "$path$filename"
 
-rm /etc/systemd/system/instantminecraft.service
+rm /etc/systemd/system/instantmc.service
 echo "Installing systemd service..."
 echo "
 [Unit]
-Description=InstantMinecraft Server
+Description=InstantMC Server
 ConditionPathExists=$path$filename
 After=network.target
 [Service]
@@ -51,14 +51,14 @@ Restart=on-failure
 RestartSec=5
 [Install]
 WantedBy=multi-user.target
-" > /etc/systemd/system/instantminecraft.service
+" > /etc/systemd/system/instantmc.service
 
-chown -R $realuser:$realuser /opt/instantminecraft
+chown -R $realuser:$realuser /opt/instantmc
 
 systemctl daemon-reload
-systemctl enable instantminecraft.service
-systemctl start instantminecraft.service
-systemctl status instantminecraft
-journalctl -u instantminecraft --no-pager
+systemctl enable instantmc.service
+systemctl start instantmc.service
+systemctl status instantmc
+journalctl -u instantmc --no-pager
 
 echo "Done!"

@@ -2,7 +2,7 @@ package utils
 
 import (
 	"github.com/docker/docker/api/types"
-	"github.com/instantminecraft/server/pkg/config"
+	"github.com/instantmc/server/pkg/config"
 	"strings"
 )
 

@@ -13,7 +13,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
-	"github.com/instantminecraft/server/pkg/config"
+	"github.com/instantmc/server/pkg/config"
 	"github.com/rs/zerolog/log"
 )
 

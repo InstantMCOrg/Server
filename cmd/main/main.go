@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/instantminecraft/server/pkg/api/router"
-	"github.com/instantminecraft/server/pkg/db"
-	"github.com/instantminecraft/server/pkg/manager"
+	"github.com/instantmc/server/pkg/api/router"
+	"github.com/instantmc/server/pkg/db"
+	"github.com/instantmc/server/pkg/manager"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"os"

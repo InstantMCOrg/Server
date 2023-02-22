@@ -1,7 +1,7 @@
 package router
 
 import (
-	"github.com/instantminecraft/server/pkg/db"
+	"github.com/instantmc/server/pkg/db"
 	"net/http"
 )
 

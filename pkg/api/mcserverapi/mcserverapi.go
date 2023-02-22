@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
-	"github.com/instantminecraft/server/pkg/models"
+	"github.com/instantmc/server/pkg/models"
 	"net/http"
 	"net/url"
 	"strconv"

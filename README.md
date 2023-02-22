@@ -1,10 +1,10 @@
-# _InstantMinecraft/_**Server**
+# _InstantMC/_**Server**
 
 🚀 An unbelievable fast Minecraft Server management tool \
 ⚡ Minecraft Server ready in **under one second** \
 🔐 Secure individual management
 
-[![Default workflow](https://github.com/InstantMinecraft/Server/actions/workflows/test.yaml/badge.svg)](https://github.com/InstantMinecraft/Server/actions/workflows/workflow.yaml)
+[![Default workflow](https://github.com/InstantMC/Server/actions/workflows/test.yaml/badge.svg)](https://github.com/InstantMC/Server/actions/workflows/workflow.yaml)
 
 # How does it work?
 Your Minecraft Server run in dedicated docker container with a [custom runtime and backend](https://github.com/InstantMC/Client).
@@ -19,7 +19,7 @@ If no prepared server fits the requirements a new one will be generated and acti
 - You opened the ports 25000-25090 (the http server listens on port 25000)
 ## Install and run the software using the ``install.sh`` script:
 ```bash
-$ wget https://raw.githubusercontent.com/InstantMinecraft/Server/main/install.sh -O install.sh
+$ wget https://raw.githubusercontent.com/InstantMC/Server/main/install.sh -O install.sh
 $ chmod +x install.sh
 $ sudo ./install.sh
 ```
@@ -114,7 +114,7 @@ name: <YOUR-NAME>
 mc_version: 1.19.3
 ram: 1024
 ```
-_Note: A list of available mc-versions can be found [here](https://github.com/InstantMinecraft/Server/blob/faab69f5ca42bb4d7dec472e0e42a9eeca7f1724/pkg/config/mccontainer.go#L16)_ \
+_Note: A list of available mc-versions can be found [here](https://github.com/InstantMC/Server/blob/faab69f5ca42bb4d7dec472e0e42a9eeca7f1724/pkg/config/mccontainer.go#L16)_ \
 _Note: RAM size is in mb and is optional (1024 is default)_
 
 Response example: \

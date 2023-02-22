@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/instantminecraft/server/pkg/enums"
+	"github.com/instantmc/server/pkg/enums"
 	"testing"
 )
 

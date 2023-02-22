@@ -1,9 +1,9 @@
 package db
 
 import (
-	"github.com/instantminecraft/server/pkg/config"
-	"github.com/instantminecraft/server/pkg/models"
-	"github.com/instantminecraft/server/pkg/utils"
+	"github.com/instantmc/server/pkg/config"
+	"github.com/instantmc/server/pkg/models"
+	"github.com/instantmc/server/pkg/utils"
 	"github.com/rs/zerolog/log"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

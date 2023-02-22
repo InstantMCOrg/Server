@@ -2,9 +2,9 @@ package router
 
 import (
 	"encoding/json"
-	"github.com/instantminecraft/server/pkg/config"
-	"github.com/instantminecraft/server/pkg/db"
-	"github.com/instantminecraft/server/pkg/utils"
+	"github.com/instantmc/server/pkg/config"
+	"github.com/instantmc/server/pkg/db"
+	"github.com/instantmc/server/pkg/utils"
 	"net/http"
 )
 

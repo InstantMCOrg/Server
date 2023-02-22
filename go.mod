@@ -1,4 +1,4 @@
-module github.com/instantminecraft/server
+module github.com/instantmc/server
 
 go 1.18
 

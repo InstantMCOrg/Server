@@ -1,8 +1,8 @@
 package manager
 
 import (
-	"github.com/instantminecraft/server/pkg/config"
-	"github.com/instantminecraft/server/pkg/utils"
+	"github.com/instantmc/server/pkg/config"
+	"github.com/instantmc/server/pkg/utils"
 )
 
 var usedPorts []int

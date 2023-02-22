@@ -1,8 +1,8 @@
 package router
 
 import (
-	"github.com/instantminecraft/server/pkg/db"
-	"github.com/instantminecraft/server/pkg/models"
+	"github.com/instantmc/server/pkg/db"
+	"github.com/instantmc/server/pkg/models"
 	"net/http"
 )
 
