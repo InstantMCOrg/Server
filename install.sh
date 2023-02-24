@@ -36,6 +36,17 @@ mkdir -p $path
 wget "$downloadUrl" -O "$path$filename"
 chmod +x "$path$filename"
 
+frontEndReleasesJson=$(curl -s https://api.github.com/repos/InstantMC/App/releases/latest)
+# Getting Tag name
+frontEndTagName=$(echo frontEndReleasesJson | grep -o -P '(?<="tag_name": ").*(?=", "target_commitish)')
+frontEndUrl="https://github.com/InstantMC/App/releases/download/$frontEndTagName/web.zip"
+
+echo "Installing frontend files from $frontEndUrl"
+mkdir -p "$path/frontend/"
+wget "$frontEndUrl" -O "$path/frontend/web.zip"
+cd "$path/frontend/"
+unzip web.zip
+
 rm /etc/systemd/system/instantmc.service
 echo "Installing systemd service..."
 echo "
