@@ -11,17 +11,23 @@ const Port = 25000
 
 func Register() *mux.Router {
 	r := mux.NewRouter()
-	r.Use(authMiddleware)
-	r.HandleFunc("/", rootRoute).Methods("GET")
+	api := r.PathPrefix("/api").Subrouter()
+	api.Use(authMiddleware)
+	api.HandleFunc("/", rootRoute).Methods("GET")
 
-	r.HandleFunc("/login", loginRoute).Methods("POST")
-	r.HandleFunc("/user/password/change", passwordChange).Methods("POST")
+	api.HandleFunc("/login", loginRoute).Methods("POST")
+	api.HandleFunc("/user/password/change", passwordChange).Methods("POST")
 
-	r.HandleFunc("/server", getServer).Methods("GET")
-	r.HandleFunc("/server/prepared", getPreparedServer).Methods("GET")
-	r.HandleFunc("/server/start", startServer).Methods("POST")
-	r.HandleFunc("/server/start/status/{serverid}", serverStartStatus).Methods("GET")
-	r.HandleFunc("/server/{serverid}/delete", deleteServer).Methods("DELETE")
+	api.HandleFunc("/server", getServer).Methods("GET")
+	api.HandleFunc("/server/prepared", getPreparedServer).Methods("GET")
+	api.HandleFunc("/server/start", startServer).Methods("POST")
+	api.HandleFunc("/server/start/status/{serverid}", serverStartStatus).Methods("GET")
+	api.HandleFunc("/server/{serverid}/delete", deleteServer).Methods("DELETE")
+
+	// Flutter frontend
+	fs := http.FileServer(http.Dir("./frontend/"))
+	r.PathPrefix("/").Handler(fs)
+
 	return r
 }
 

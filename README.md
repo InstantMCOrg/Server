@@ -28,7 +28,7 @@ $ sudo ./install.sh
 ## Using the HTTP-API
 _The HTTP server is listening on port 25000_
 
-`GET /` \
+`GET /api/` \
 Response:
 ````json
 {
@@ -39,7 +39,7 @@ Response:
 ### Note: First of all, you need to login and obtain your session
 First-Time-Login after installation:
 
-`POST /login` \
+`POST /api/login` \
 _Form Body:_ \
 `username : admin`\
 `password : admin`
@@ -53,7 +53,7 @@ This will be the response:
 ```
 _You'll get your token to use the HTTP api, but you need to change the admin password. Do the following:_
 
-`POST /user/password/change` \
+`POST /api/user/password/change` \
 _Headers:_ \
 `auth : <YOUR-TOKEN>`\
 _Form Body:_ \
@@ -70,7 +70,7 @@ _The old token won't work any more after you changed your password. Use the new 
 ### After you completed the _First-Time-Login_-steps you can access the REST HTTP API:
 **Note: you need to send the following header in every request:** `auth: <YOUR-AUTH-TOKEN>`
 
-`GET /server` \
+`GET /api/server` \
 Response example:
 ````json
 {
@@ -88,7 +88,7 @@ Response example:
 ````
 
 
-`GET /server/prepared` \
+`GET /api/server/prepared` \
 Response example:
 ````json
 {
@@ -107,7 +107,7 @@ Response example:
 }
 ````
 
-`POST /server/start` \
+`POST /api/server/start` \
 _Form values:_
 ```
 name: <YOUR-NAME>
@@ -142,13 +142,13 @@ _If a server needs to be prepared before start_
 _In that case take a look at the `ws /server/start/status/` request_
 
 
-`DELETE /server/<SERVER-ID>/delete` \
+`DELETE /api/server/<SERVER-ID>/delete` \
 Response example:
 ````json
 {}
 ````
 
-`ws /server/start/status/<SERVER-ID>` \
+`ws /api/server/start/status/<SERVER-ID>` \
 _Retrieves status about the server preparation_ \
 Message Examples:
 ````json
