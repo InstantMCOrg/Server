@@ -21,12 +21,12 @@ rm /opt/instantmc/$filename
 
 echo "Searching executable for architecture $arch..."
 
-releasesJson=$(curl -s https://api.github.com/repos/InstantMC/Server/releases/latest)
+releasesJson=$(curl -s https://api.github.com/repos/InstantMCOrg/Server/releases/latest)
 # Getting Tag name
 tagName=$(echo $releasesJson | grep -o -P '(?<="tag_name": ").*(?=", "target_commitish)')
 echo "Latest release is $tagName"
 
-downloadUrl="https://github.com/InstantMC/Server/releases/download/$tagName/instantminecraftserver_$arch"
+downloadUrl="https://github.com/InstantMCOrg/Server/releases/download/$tagName/instantminecraftserver_$arch"
 path="/opt/instantmc/"
 cd $path && cd ..
 chown "$realuser" instantmc
@@ -36,10 +36,10 @@ mkdir -p $path
 wget "$downloadUrl" -O "$path$filename"
 chmod +x "$path$filename"
 
-frontEndReleasesJson=$(curl -s https://api.github.com/repos/InstantMC/App/releases/latest)
+frontEndReleasesJson=$(curl -s https://api.github.com/repos/InstantMCOrg/App/releases/latest)
 # Getting Tag name
 frontEndTagName=$(echo frontEndReleasesJson | grep -o -P '(?<="tag_name": ").*(?=", "target_commitish)')
-frontEndUrl="https://github.com/InstantMC/App/releases/download/$frontEndTagName/web.zip"
+frontEndUrl="https://github.com/InstantMCOrg/App/releases/download/$frontEndTagName/web.zip"
 
 echo "Installing frontend files from $frontEndUrl"
 mkdir -p "$path/frontend/"
