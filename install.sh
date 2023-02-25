@@ -38,7 +38,7 @@ chmod +x "$path$filename"
 
 frontEndReleasesJson=$(curl -s https://api.github.com/repos/InstantMCOrg/App/releases/latest)
 # Getting Tag name
-frontEndTagName=$(echo frontEndReleasesJson | grep -o -P '(?<="tag_name": ").*(?=", "target_commitish)')
+frontEndTagName=$(echo $frontEndReleasesJson | grep -o -P '(?<="tag_name": ").*(?=", "target_commitish)')
 frontEndUrl="https://github.com/InstantMCOrg/App/releases/download/$frontEndTagName/web.zip"
 
 echo "Installing frontend files from $frontEndUrl"
