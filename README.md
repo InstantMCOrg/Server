@@ -4,7 +4,7 @@
 ⚡ Minecraft Server ready in **under one second** \
 🔐 Secure individual management
 
-[![Test](https://github.com/InstantMinecraft/Server/actions/workflows/test.yaml/badge.svg)](https://github.com/InstantMinecraft/Server/actions/workflows/test.yaml)
+[![Test](https://github.com/InstantMCOrg/Server/actions/workflows/test.yaml/badge.svg)](https://github.com/InstantMinecraft/Server/actions/workflows/test.yaml)
 
 # How does it work?
 Your Minecraft Server run in dedicated docker container with a [custom runtime and backend](https://github.com/InstantMC/Client).
@@ -19,7 +19,7 @@ If no prepared server fits the requirements a new one will be generated and acti
 - You opened the ports 25000-25090 (the http server listens on port 25000)
 ## Install and run the software using the ``install.sh`` script:
 ```bash
-$ wget https://raw.githubusercontent.com/InstantMC/Server/main/install.sh -O install.sh
+$ wget https://raw.githubusercontent.com/InstantMCOrg/Server/main/install.sh -O install.sh
 $ chmod +x install.sh
 $ sudo ./install.sh
 ```
