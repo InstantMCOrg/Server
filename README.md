@@ -4,7 +4,7 @@
 ⚡ Minecraft Server ready in **under one second** \
 🔐 Secure individual management
 
-[![Default workflow](https://github.com/InstantMC/Server/actions/workflows/test.yaml/badge.svg)](https://github.com/InstantMC/Server/actions/workflows/workflow.yaml)
+[![Test](https://github.com/InstantMinecraft/Server/actions/workflows/test.yaml/badge.svg)](https://github.com/InstantMinecraft/Server/actions/workflows/test.yaml)
 
 # How does it work?
 Your Minecraft Server run in dedicated docker container with a [custom runtime and backend](https://github.com/InstantMC/Client).
