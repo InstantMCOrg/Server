@@ -3,7 +3,7 @@ package config
 import "strconv"
 
 const (
-	BaseImageName = "ghcr.io/instantmc/client"
+	BaseImageName = "ghcr.io/instantmcorg/client"
 
 	McVersionSuffix = ":mc-"
 
