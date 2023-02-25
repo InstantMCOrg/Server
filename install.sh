@@ -26,7 +26,7 @@ releasesJson=$(curl -s https://api.github.com/repos/InstantMCOrg/Server/releases
 tagName=$(echo $releasesJson | grep -o -P '(?<="tag_name": ").*(?=", "target_commitish)')
 echo "Latest release is $tagName"
 
-downloadUrl="https://github.com/InstantMCOrg/Server/releases/download/$tagName/instantminecraftserver_$arch"
+downloadUrl="https://github.com/InstantMCOrg/Server/releases/download/$tagName/instantmcserver_$arch"
 path="/opt/instantmc/"
 cd $path && cd ..
 chown "$realuser" instantmc
