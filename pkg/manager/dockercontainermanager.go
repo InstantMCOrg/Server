@@ -2,6 +2,7 @@ package manager
 
 import (
 	"bufio"
+	"encoding/json"
 	"github.com/docker/docker/api/types/mount"
 	"math"
 	"strconv"
@@ -186,6 +187,59 @@ func IsContainerPaused(containerID string) (bool, error) {
 
 func KillContainer(containerID string) error {
 	return cli.ContainerRemove(ctx, containerID, types.ContainerRemoveOptions{Force: true, RemoveVolumes: true})
+}
+
+func SubscribeToContainerStats(containerID string, jsonStats chan string) error {
+	containerStats, err := cli.ContainerStats(ctx, containerID, true)
+	if err != nil {
+		return err
+	}
+	bufReader := bufio.NewReader(containerStats.Body)
+	for {
+		bytes, err := bufReader.ReadBytes('\n')
+		if err != nil {
+			break
+		}
+		jsonData := map[string]interface{}{}
+
+		err = json.Unmarshal(bytes, &jsonData)
+		if err != nil {
+			return err
+		}
+
+		containerCpuUsage := jsonData["cpu_stats"].(map[string]interface{})["cpu_usage"].(map[string]interface{})["total_usage"].(float64)
+		systemCpuUsage := jsonData["cpu_stats"].(map[string]interface{})["system_cpu_usage"].(float64)
+		var percentCpuUsage float64
+		if containerCpuUsage == 0 || systemCpuUsage == 0 {
+			percentCpuUsage = 0
+		} else {
+			percentCpuUsage = containerCpuUsage / systemCpuUsage
+		}
+
+		memoryUsage := jsonData["memory_stats"].(map[string]interface{})["usage"].(float64)        // bytes
+		memoryMaxUsage := jsonData["memory_stats"].(map[string]interface{})["max_usage"].(float64) // bytes
+		if memoryUsage > 0 {
+			memoryUsage = memoryUsage / 1000 / 1000 // convert to mb
+		}
+		if memoryMaxUsage > 0 {
+			memoryMaxUsage = memoryMaxUsage / 1000 / 1000 // convert to mb
+		}
+
+		jsonString, _ := json.Marshal(map[string]interface{}{
+			"cpu_usage_percent":   percentCpuUsage,
+			"memory_usage_mb":     memoryUsage,
+			"max_memory_usage_mb": memoryMaxUsage,
+		})
+
+		// non blocking channel sending
+		select {
+		case jsonStats <- string(jsonString):
+			break
+		default:
+			break
+		}
+	}
+	return nil
 }
 
 func Close() {
