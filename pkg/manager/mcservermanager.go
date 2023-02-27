@@ -104,6 +104,7 @@ func InitMCServerManagement() {
 				ServerID:     server.ServerID,
 				AutoDeploy:   true,
 			})
+			// TODO bugfix: Add db.UpdateServerContainerID
 			go func() {
 				coreBootUpWaitGroup.Wait()
 				log.Info().Msgf("☑ Mc server %s started successfully", targetServerID)
