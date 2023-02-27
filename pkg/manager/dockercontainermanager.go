@@ -200,15 +200,17 @@ func SubscribeToContainerStats(containerID string, jsonStats *chan string) error
 		if err != nil {
 			break
 		}
-		jsonData := map[string]interface{}{}
+		jsonData := types.StatsJSON{}
 
 		err = json.Unmarshal(bytes, &jsonData)
 		if err != nil {
 			return err
 		}
 
-		containerCpuUsage := jsonData["cpu_stats"].(map[string]interface{})["cpu_usage"].(map[string]interface{})["total_usage"].(float64)
-		systemCpuUsage := jsonData["cpu_stats"].(map[string]interface{})["system_cpu_usage"].(float64)
+		//containerCpuUsage := jsonData["cpu_stats"].(map[string]interface{})["cpu_usage"].(map[string]interface{})["total_usage"].(float64)
+		//systemCpuUsage := jsonData["cpu_stats"].(map[string]interface{})["system_cpu_usage"].(float64)
+		containerCpuUsage := float64(jsonData.CPUStats.CPUUsage.TotalUsage)
+		systemCpuUsage := float64(jsonData.CPUStats.SystemUsage)
 		var percentCpuUsage float64
 		if containerCpuUsage == 0 || systemCpuUsage == 0 {
 			percentCpuUsage = 0
@@ -216,8 +218,10 @@ func SubscribeToContainerStats(containerID string, jsonStats *chan string) error
 			percentCpuUsage = containerCpuUsage / systemCpuUsage
 		}
 
-		memoryUsage := jsonData["memory_stats"].(map[string]interface{})["usage"].(float64)        // bytes
-		memoryMaxUsage := jsonData["memory_stats"].(map[string]interface{})["max_usage"].(float64) // bytes
+		//memoryUsage := jsonData["memory_stats"].(map[string]interface{})["usage"].(float64)        // bytes
+		//memoryMaxUsage := jsonData["memory_stats"].(map[string]interface{})["max_usage"].(float64) // bytes
+		memoryUsage := jsonData.MemoryStats.Usage
+		memoryMaxUsage := jsonData.MemoryStats.MaxUsage
 		if memoryUsage > 0 {
 			memoryUsage = memoryUsage / 1000 / 1000 // convert to mb
 		}
@@ -225,8 +229,10 @@ func SubscribeToContainerStats(containerID string, jsonStats *chan string) error
 			memoryMaxUsage = memoryMaxUsage / 1000 / 1000 // convert to mb
 		}
 
+		percentCpuUsage = calculateCPUPercentUnix(0, 0, &jsonData)
+
 		jsonString, _ := json.Marshal(map[string]interface{}{
-			"cpu_usage_percent":   percentCpuUsage,
+			"cpu_usage_percent":   percentCpuUsage * 100,
 			"memory_usage_mb":     memoryUsage,
 			"max_memory_usage_mb": memoryMaxUsage,
 		})
@@ -244,4 +250,20 @@ func SubscribeToContainerStats(containerID string, jsonStats *chan string) error
 
 func Close() {
 	cli.Close()
+}
+
+// taken from https://github.com/moby/moby/blob/eb131c5383db8cac633919f82abad86c99bffbe5/cli/command/container/stats_helpers.go#L175-L188
+func calculateCPUPercentUnix(previousCPU, previousSystem uint64, v *types.StatsJSON) float64 {
+	var (
+		cpuPercent = 0.0
+		// calculate the change for the cpu usage of the container in between readings
+		cpuDelta = float64(v.CPUStats.CPUUsage.TotalUsage) - float64(previousCPU)
+		// calculate the change for the entire system between readings
+		systemDelta = float64(v.CPUStats.SystemUsage) - float64(previousSystem)
+	)
+
+	if systemDelta > 0.0 && cpuDelta > 0.0 {
+		cpuPercent = (cpuDelta / systemDelta) * float64(len(v.CPUStats.CPUUsage.PercpuUsage)) * 100.0
+	}
+	return cpuPercent
 }
