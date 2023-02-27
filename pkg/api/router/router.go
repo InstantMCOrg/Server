@@ -22,6 +22,7 @@ func Register() *mux.Router {
 	api.HandleFunc("/server/prepared", getPreparedServer).Methods("GET")
 	api.HandleFunc("/server/start", startServer).Methods("POST")
 	api.HandleFunc("/server/start/status/{serverid}", serverStartStatus).Methods("GET")
+	api.HandleFunc("/server/stats/{serverid}", serverStats).Methods("GET")
 	api.HandleFunc("/server/{serverid}/delete", deleteServer).Methods("DELETE")
 
 	// Flutter frontend

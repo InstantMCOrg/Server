@@ -189,7 +189,7 @@ func KillContainer(containerID string) error {
 	return cli.ContainerRemove(ctx, containerID, types.ContainerRemoveOptions{Force: true, RemoveVolumes: true})
 }
 
-func SubscribeToContainerStats(containerID string, jsonStats chan string) error {
+func SubscribeToContainerStats(containerID string, jsonStats *chan string) error {
 	containerStats, err := cli.ContainerStats(ctx, containerID, true)
 	if err != nil {
 		return err
@@ -233,7 +233,7 @@ func SubscribeToContainerStats(containerID string, jsonStats chan string) error 
 
 		// non blocking channel sending
 		select {
-		case jsonStats <- string(jsonString):
+		case *jsonStats <- string(jsonString):
 			break
 		default:
 			break

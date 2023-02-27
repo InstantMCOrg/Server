@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"github.com/instantmc/server/pkg/api/mcserverapi"
 	"github.com/instantmc/server/pkg/config"
 	"github.com/instantmc/server/pkg/db"
@@ -267,5 +268,35 @@ func serverStartStatus(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
+	conn.Close()
+}
+
+func serverStats(w http.ResponseWriter, r *http.Request) {
+	serverID := mux.Vars(r)["serverid"]
+
+	// check if server exist
+	serverData, err := db.GetMcServerData(serverID)
+	if err != nil {
+		sendError("Server with given ID not found", w, http.StatusNotFound)
+		return
+	}
+
+	conn, err := Upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		sendError("Couldn't establish a websocket connection", w, http.StatusBadRequest)
+		return
+	}
+
+	jsonDataChan := make(chan string)
+	go func() {
+		for {
+			jsonMessage := <-jsonDataChan
+			conn.WriteMessage(websocket.TextMessage, []byte(jsonMessage))
+		}
+	}()
+	err = manager.SubscribeToContainerStats(serverData.ContainerID, &jsonDataChan)
+	conn.WriteJSON(map[string]interface{}{
+		"message": "An error occurred: " + err.Error(),
+	})
 	conn.Close()
 }
