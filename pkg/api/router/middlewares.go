@@ -8,7 +8,7 @@ import (
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		if r.URL.Path != "/" && r.URL.Path != "/login" {
+		if r.URL.Path != "/api/" && r.URL.Path != "/api/login" {
 			clientAuthKey := r.Header.Get("auth")
 			// searching for session...
 			_, err := db.GetSession(clientAuthKey)
