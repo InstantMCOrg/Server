@@ -42,6 +42,7 @@ frontEndTagName=$(echo $frontEndReleasesJson | grep -o -P '(?<="tag_name": ").*(
 frontEndUrl="https://github.com/InstantMCOrg/App/releases/download/$frontEndTagName/web.zip"
 
 echo "Installing frontend files from $frontEndUrl"
+rm -rf "$path/frontend/"
 mkdir -p "$path/frontend/"
 wget "$frontEndUrl" -O "$path/frontend/web.zip"
 cd "$path/frontend/"
