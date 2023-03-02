@@ -104,14 +104,36 @@ func InitMCServerManagement() {
 				ServerID:     server.ServerID,
 				AutoDeploy:   true,
 			})
-			// TODO bugfix: Add db.UpdateServerContainerID
 			go func() {
 				coreBootUpWaitGroup.Wait()
+				containerID, err := getContainerIDbyServerID(server.ServerID)
+				if err != nil || containerID == "" {
+					log.Error().Err(err).Msgf("Mc server %s startup failed", targetServerID)
+					return
+				}
+				if err := db.UpdateServerContainerID(&server, containerID); err != nil {
+					log.Error().Err(err).Msgf("Couldn't update db entry for containerID for server %s", targetServerID)
+				}
 				log.Info().Msgf("☑ Mc server %s started successfully", targetServerID)
 			}()
 		}
 	}
 
+}
+
+// Returns the container ID of the running container with given Server ID. Returns an empty string if not found
+func getContainerIDbyServerID(serverID string) (string, error) {
+	alreadyRunningServer, err := GetRunningMcServer()
+	if err != nil {
+		return "", err
+	}
+
+	for _, server := range alreadyRunningServer {
+		if serverID == server.ServerID {
+			return server.ContainerID, nil
+		}
+	}
+	return "", nil
 }
 
 // PrepareMcServer Creates a mc server container, setup the mc world and pause the container for later deployment
