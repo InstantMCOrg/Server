@@ -2,14 +2,12 @@ package router
 
 import (
 	"github.com/instantmc/server/pkg/db"
-	"github.com/rs/zerolog/log"
 	"net/http"
 )
 
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		log.Debug().Msgf("Url path: %s", r.URL)
 		if r.URL.Path != "/api/" && r.URL.Path != "/api/login" {
 			clientAuthKey := r.Header.Get("auth")
 			// searching for session...
