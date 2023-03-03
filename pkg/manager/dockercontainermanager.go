@@ -232,7 +232,7 @@ func SubscribeToContainerStats(containerID string, jsonStats *chan string) error
 		percentCpuUsage = calculateCPUPercentUnix(0, 0, &jsonData)
 
 		jsonString, _ := json.Marshal(map[string]interface{}{
-			"cpu_usage_percent":   percentCpuUsage * 100,
+			"cpu_usage_percent":   strconv.FormatFloat(percentCpuUsage*100, 'E', -1, 64),
 			"memory_usage_mb":     memoryUsage,
 			"max_memory_usage_mb": memoryMaxUsage,
 			"container_cpu_usage": containerCpuUsage,
