@@ -229,7 +229,7 @@ func SubscribeToContainerStats(containerID string, jsonStats *chan string) error
 			memoryMaxUsage = memoryMaxUsage / 1000 / 1000 // convert to mb
 		}
 
-		percentCpuUsage2 := calculateCPUPercentUnix(0, 0, &jsonData)
+		percentCpuUsage2 := calculateCPUPercentUnix(jsonData.PreCPUStats.CPUUsage.TotalUsage, jsonData.PreCPUStats.SystemUsage, &jsonData)
 
 		jsonString, _ := json.Marshal(map[string]interface{}{
 			"cpu_usage_percent":   strconv.FormatFloat(percentCpuUsage2*100, 'E', -1, 64),
