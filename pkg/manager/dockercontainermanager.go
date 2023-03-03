@@ -3,6 +3,7 @@ package manager
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"github.com/docker/docker/api/types/mount"
 	"math"
 	"strconv"
@@ -229,11 +230,10 @@ func SubscribeToContainerStats(containerID string, jsonStats *chan string) error
 			memoryMaxUsage = memoryMaxUsage / 1000 / 1000 // convert to mb
 		}
 
-		percentCpuUsage2 := calculateCPUPercentUnix(jsonData.PreCPUStats.CPUUsage.TotalUsage, jsonData.PreCPUStats.SystemUsage, &jsonData)
+		percentCpuUsage = calculateCPUPercentUnix(jsonData.PreCPUStats.CPUUsage.TotalUsage, jsonData.PreCPUStats.SystemUsage, &jsonData)
 
 		jsonString, _ := json.Marshal(map[string]interface{}{
-			"cpu_usage_percent":   strconv.FormatFloat(percentCpuUsage2*100, 'E', -1, 64),
-			"cpu_usage_percent_2": strconv.FormatFloat(percentCpuUsage*100, 'E', -1, 64),
+			"cpu_usage_percent":   fmt.Sprintf("%f", percentCpuUsage),
 			"memory_usage_mb":     memoryUsage,
 			"max_memory_usage_mb": memoryMaxUsage,
 			"container_cpu_usage": containerCpuUsage,
