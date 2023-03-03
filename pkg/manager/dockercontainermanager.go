@@ -235,6 +235,8 @@ func SubscribeToContainerStats(containerID string, jsonStats *chan string) error
 			"cpu_usage_percent":   percentCpuUsage * 100,
 			"memory_usage_mb":     memoryUsage,
 			"max_memory_usage_mb": memoryMaxUsage,
+			"container_cpu_usage": containerCpuUsage,
+			"system_cpu_usage":    systemCpuUsage,
 		})
 
 		// non blocking channel sending
