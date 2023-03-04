@@ -233,11 +233,9 @@ func SubscribeToContainerStats(containerID string, jsonStats *chan string) error
 		percentCpuUsage = calculateCPUPercentUnix(jsonData.PreCPUStats.CPUUsage.TotalUsage, jsonData.PreCPUStats.SystemUsage, &jsonData)
 
 		jsonString, _ := json.Marshal(map[string]interface{}{
-			"cpu_usage_percent":   fmt.Sprintf("%f", percentCpuUsage),
-			"memory_usage_mb":     memoryUsage,
-			"max_memory_usage_mb": memoryMaxUsage,
-			"container_cpu_usage": containerCpuUsage,
-			"system_cpu_usage":    systemCpuUsage,
+			"cpu_usage_percent": fmt.Sprintf("%f", percentCpuUsage),
+			"memory_usage_mb":   memoryUsage,
+			//"max_memory_usage_mb": memoryMaxUsage,
 		})
 
 		// non blocking channel sending
@@ -266,7 +264,7 @@ func calculateCPUPercentUnix(previousCPU, previousSystem uint64, v *types.StatsJ
 	)
 
 	if systemDelta > 0.0 && cpuDelta > 0.0 {
-		cpuPercent = (cpuDelta / systemDelta) * float64(len(v.CPUStats.CPUUsage.PercpuUsage)) * 100.0
+		cpuPercent = (cpuDelta / systemDelta) * /*float64(len(v.CPUStats.CPUUsage.PercpuUsage))*/ 100.0
 	}
 	return cpuPercent
 }
