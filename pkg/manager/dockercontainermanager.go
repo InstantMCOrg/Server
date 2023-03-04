@@ -232,11 +232,15 @@ func SubscribeToContainerStats(containerID string, jsonStats *chan string) error
 
 		percentCpuUsage = calculateCPUPercentUnix(jsonData.PreCPUStats.CPUUsage.TotalUsage, jsonData.PreCPUStats.SystemUsage, &jsonData)
 
-		jsonString, _ := json.Marshal(map[string]interface{}{
+		// Deprecated
+		/*jsonString, _ := json.Marshal(map[string]interface{}{
 			"cpu_usage_percent": fmt.Sprintf("%f", percentCpuUsage),
 			"memory_usage_mb":   memoryUsage,
 			//"max_memory_usage_mb": memoryMaxUsage,
-		})
+		})*/
+
+		usage := models.McContainerResourceStats{CpuUsage: percentCpuUsage, MemoryUsage: memoryUsage, Time: time.Now()}
+		jsonString, _ := json.Marshal(usage)
 
 		// non blocking channel sending
 		select {

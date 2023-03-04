@@ -3,6 +3,7 @@ package models
 import (
 	"github.com/instantmc/server/pkg/enums"
 	"sync"
+	"time"
 )
 
 type McServerContainer struct {
@@ -62,4 +63,10 @@ type McContainerSearchConfig struct {
 	McVersion string
 	Status    enums.ServerStatus
 	RamSizeMB int
+}
+
+type McContainerResourceStats struct {
+	CpuUsage    float64   `json:"cpu_usage_percent"`
+	MemoryUsage uint64    `json:"memory_usage_mb"`
+	Time        time.Time `json:"time"`
 }
